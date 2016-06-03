@@ -1,0 +1,15 @@
+Source: python-pgq
+Section: python
+Priority: optional
+Maintainer: Marko Kreen <markokr@gmail.com>
+Standards-Version: 3.9.2
+Build-Depends: debhelper, python-all, python3-all
+X-Python-Version: >= 2.7
+X-Python3-Version: >= 3.1
+
+Package: python-pgq
+Architecture: all
+Depends: ${misc:Depends}, ${python:Depends}, python-skytools, python-psycopg2
+Description: PgQ queue processing for Python
+ .
+
