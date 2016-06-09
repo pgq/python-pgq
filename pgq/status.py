@@ -9,7 +9,7 @@ import skytools
 
 __all__ = ['PGQStatus']
 
-def ival(data, _as = None):
+def ival(data, _as=None):
     "Format interval for output"
     if not _as:
         _as = data.split('.')[-1]
@@ -19,7 +19,7 @@ def ival(data, _as = None):
 
 class PGQStatus(skytools.DBScript):
     """Info gathering and display."""
-    def __init__(self, args, check = 0):
+    def __init__(self, args, check=0):
         skytools.DBScript.__init__(self, 'pgqadm', args)
 
         self.show_status()

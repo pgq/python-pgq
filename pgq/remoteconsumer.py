@@ -43,7 +43,7 @@ class RemoteConsumer(Consumer):
         in external database.
         """
         q = "select pgq_ext.is_batch_done(%s, %s)"
-        dst_curs.execute(q, [ self.consumer_name, batch_id ])
+        dst_curs.execute(q, [self.consumer_name, batch_id])
         return dst_curs.fetchone()[0]
 
     def set_last_batch(self, dst_curs, batch_id):
@@ -51,7 +51,7 @@ class RemoteConsumer(Consumer):
         in external database.
         """
         q = "select pgq_ext.set_batch_done(%s, %s)"
-        dst_curs.execute(q, [ self.consumer_name, batch_id ])
+        dst_curs.execute(q, [self.consumer_name, batch_id])
 
     def process_remote_batch(self, db, batch_id, event_list, dst_db):
         raise Exception('process_remote_batch not implemented')
@@ -83,12 +83,12 @@ class SerialConsumer(Consumer):
             sys.exit(0)
         return Consumer.startup(self)
 
-    def init_optparse(self, parser = None):
+    def init_optparse(self, parser=None):
         p = Consumer.init_optparse(self, parser)
-        p.add_option("--rewind", action = "store_true",
-                help = "change queue position according to destination")
-        p.add_option("--reset", action = "store_true",
-                help = "reset queue pos on destination side")
+        p.add_option("--rewind", action="store_true",
+                help="change queue position according to destination")
+        p.add_option("--reset", action="store_true",
+                help="reset queue pos on destination side")
         return p
 
     def process_batch(self, db, batch_id, event_list):
@@ -187,6 +187,6 @@ class SerialConsumer(Consumer):
 
     def set_last_tick(self, dst_curs, tick_id):
         q = "select %s.set_last_tick(%%s, %%s)" % self.dst_schema
-        dst_curs.execute(q, [ self.consumer_name, tick_id ])
+        dst_curs.execute(q, [self.consumer_name, tick_id])
 
 

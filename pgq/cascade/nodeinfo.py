@@ -54,7 +54,7 @@ class NodeInfo(object):
     last_tick = None
     node_attrs = {}
 
-    def __init__(self, queue_name, row, main_worker = True, node_name = None):
+    def __init__(self, queue_name, row, main_worker=True, node_name=None):
         self.queue_name = queue_name
         self.member_map = {}
         self.main_worker = main_worker
@@ -285,7 +285,7 @@ class QueueInfo(object):
                 levels = subnode.levels + 1
         node.total_childs = total
         node.levels = levels
-        node.child_list.sort(key = _node_key)
+        node.child_list.sort(key=_node_key)
 
 def _setpfx(pfx, sfx):
     if pfx:

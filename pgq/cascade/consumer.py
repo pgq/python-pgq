@@ -38,13 +38,13 @@ class CascadedConsumer(BaseConsumer):
         self.target_db = db_name
         self.provider_connstr = None
 
-    def init_optparse(self, parser = None):
+    def init_optparse(self, parser=None):
         p = BaseConsumer.init_optparse(self, parser)
-        p.add_option("--provider", help = "provider location for --register")
-        p.add_option("--rewind", action = "store_true",
-                help = "change queue position according to destination")
-        p.add_option("--reset", action = "store_true",
-                help = "reset queue position on destination side")
+        p.add_option("--provider", help="provider location for --register")
+        p.add_option("--rewind", action="store_true",
+                help="change queue position according to destination")
+        p.add_option("--reset", action="store_true",
+                help="reset queue position on destination side")
         return p
 
     def startup(self):
@@ -56,7 +56,7 @@ class CascadedConsumer(BaseConsumer):
             sys.exit(0)
         return BaseConsumer.startup(self)
 
-    def register_consumer(self, provider_loc = None):
+    def register_consumer(self, provider_loc=None):
         """Register consumer on source node first, then target node."""
 
         if not provider_loc:
@@ -67,12 +67,12 @@ class CascadedConsumer(BaseConsumer):
 
         dst_db = self.get_database(self.target_db)
         #dst_curs = dst_db.cursor()
-        src_db = self.get_database(PDB, connstr = provider_loc, profile = 'remote')
+        src_db = self.get_database(PDB, connstr=provider_loc, profile='remote')
         src_curs = src_db.cursor()
 
         # check target info
         q = "select * from pgq_node.get_node_info(%s)"
-        res = self.exec_cmd(src_db, q, [ self.queue_name ])
+        res = self.exec_cmd(src_db, q, [self.queue_name])
         pnode = res[0]['node_name']
         if not pnode:
             raise Exception('parent node not initialized?')
@@ -95,13 +95,13 @@ class CascadedConsumer(BaseConsumer):
     def get_consumer_state(self):
         dst_db = self.get_database(self.target_db)
         q = "select * from pgq_node.get_consumer_state(%s, %s)"
-        rows = self.exec_cmd(dst_db, q, [ self.queue_name, self.consumer_name ])
+        rows = self.exec_cmd(dst_db, q, [self.queue_name, self.consumer_name])
         state = rows[0]
         return state
 
     def get_provider_db(self, state):
         provider_loc = state['provider_location']
-        return self.get_database(PDB, connstr = provider_loc, profile = 'remote')
+        return self.get_database(PDB, connstr=provider_loc, profile='remote')
 
     def unregister_consumer(self):
         dst_db = self.get_database(self.target_db)
@@ -113,7 +113,7 @@ class CascadedConsumer(BaseConsumer):
 
         # unregister on subscriber
         q = "select * from pgq_node.unregister_consumer(%s, %s)"
-        self.exec_cmd(dst_db, q, [ self.queue_name, self.consumer_name ])
+        self.exec_cmd(dst_db, q, [self.queue_name, self.consumer_name])
 
     def rewind(self):
         self.log.info("Rewinding queue")
@@ -199,7 +199,7 @@ class CascadedConsumer(BaseConsumer):
 
         return BaseConsumer.work(self)
 
-    def refresh_state(self, dst_db, full_logic = True):
+    def refresh_state(self, dst_db, full_logic=True):
         """Fetch consumer state from target node.
 
         This also sleeps if pause is set and updates
@@ -208,17 +208,17 @@ class CascadedConsumer(BaseConsumer):
 
         while 1:
             q = "select * from pgq_node.get_consumer_state(%s, %s)"
-            rows = self.exec_cmd(dst_db, q, [ self.queue_name, self.consumer_name ])
+            rows = self.exec_cmd(dst_db, q, [self.queue_name, self.consumer_name])
             state = rows[0]
 
             # tag refreshed
             if not state['uptodate'] and full_logic:
                 q = "select * from pgq_node.set_consumer_uptodate(%s, %s, true)"
-                self.exec_cmd(dst_db, q, [ self.queue_name, self.consumer_name ])
+                self.exec_cmd(dst_db, q, [self.queue_name, self.consumer_name])
 
             if state['cur_error'] and self.work_state != -1:
                 q = "select * from pgq_node.set_consumer_error(%s, %s, NULL)"
-                self.exec_cmd(dst_db, q, [ self.queue_name, self.consumer_name ])
+                self.exec_cmd(dst_db, q, [self.queue_name, self.consumer_name])
 
             if not state['paused'] or not full_logic:
                 break
@@ -281,13 +281,13 @@ class CascadedConsumer(BaseConsumer):
         """
         # this also commits
         q = "select * from pgq_node.set_consumer_completed(%s, %s, %s)"
-        self.exec_cmd(dst_db, q, [ self.queue_name, self.consumer_name, tick_id ])
+        self.exec_cmd(dst_db, q, [self.queue_name, self.consumer_name, tick_id])
 
     def exception_hook(self, det, emsg):
         try:
             dst_db = self.get_database(self.target_db)
             q = "select * from pgq_node.set_consumer_error(%s, %s, %s)"
-            self.exec_cmd(dst_db, q, [ self.queue_name, self.consumer_name, emsg ])
+            self.exec_cmd(dst_db, q, [self.queue_name, self.consumer_name, emsg])
         except:
             self.log.warning("Failure to call pgq_node.set_consumer_error()")
         self.reset()

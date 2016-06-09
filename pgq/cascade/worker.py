@@ -269,7 +269,7 @@ class CascadedWorker(CascadedConsumer):
                 if n['dead']:
                     # ignore dead nodes
                     continue
-                wmdb = self.get_database('wmdb', connstr = n['node_location'], autocommit = 1, profile = 'remote')
+                wmdb = self.get_database('wmdb', connstr=n['node_location'], autocommit=1, profile='remote')
                 wmcurs = wmdb.cursor()
                 q = 'select local_watermark from pgq_node.get_node_info(%s)'
                 wmcurs.execute(q, [self.queue_name])
@@ -425,12 +425,12 @@ class CascadedWorker(CascadedConsumer):
         bulk_insert_events(dst_curs, self.ev_buf, flds, st.target_queue)
         self.ev_buf = []
 
-    def refresh_state(self, dst_db, full_logic = True):
+    def refresh_state(self, dst_db, full_logic=True):
         """Load also node state from target node.
         """
         res = CascadedConsumer.refresh_state(self, dst_db, full_logic)
         q = "select * from pgq_node.get_node_info(%s)"
-        st = self.exec_cmd(dst_db, q, [ self.pgq_queue_name ])
+        st = self.exec_cmd(dst_db, q, [self.pgq_queue_name])
         self._worker_state = WorkerState(self.pgq_queue_name, st[0])
         return res
 

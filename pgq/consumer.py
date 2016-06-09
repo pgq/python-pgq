@@ -34,7 +34,7 @@ class RetriableEvent(Event):
     def get_status(self):
         return self._status
 
-    def tag_retry(self, retry_time = 60):
+    def tag_retry(self, retry_time=60):
         self._status = EV_RETRY
         self.retry_time = retry_time
 
@@ -57,7 +57,7 @@ class RetriableWalkerEvent(RetriableEvent):
     def get_status(self):
         self._walker.get_status(self)
 
-    def tag_retry(self, retry_time = 60):
+    def tag_retry(self, retry_time=60):
         self._walker.tag_event_retry(self, retry_time)
 
 
@@ -65,7 +65,7 @@ class RetriableBatchWalker(BaseBatchWalker):
     """BatchWalker that returns RetriableEvents
     """
 
-    def __init__(self, curs, batch_id, queue_name, fetch_size = 300, consumer_filter = None):
+    def __init__(self, curs, batch_id, queue_name, fetch_size=300, consumer_filter=None):
         super(RetriableBatchWalker, self).__init__(curs, batch_id, queue_name, fetch_size, consumer_filter)
         self.status_map = {}
 

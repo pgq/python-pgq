@@ -44,14 +44,14 @@ class LocalConsumer(BaseConsumer):
 
         self.local_tracking_file = self.cf.getfile('local_tracking_file')
         if not os.path.exists(os.path.dirname(self.local_tracking_file)):
-            raise skytools.UsageError ("path does not exist: %s" % self.local_tracking_file)
+            raise skytools.UsageError("path does not exist: %s" % self.local_tracking_file)
 
-    def init_optparse(self, parser = None):
+    def init_optparse(self, parser=None):
         p = super(LocalConsumer, self).init_optparse(parser)
-        p.add_option("--rewind", action = "store_true",
-                help = "change queue position according to local tick")
-        p.add_option("--reset", action = "store_true",
-                help = "reset local tick based on queue position")
+        p.add_option("--rewind", action="store_true",
+                help="change queue position according to local tick")
+        p.add_option("--reset", action="store_true",
+                help="reset local tick based on queue position")
         return p
 
     def startup(self):

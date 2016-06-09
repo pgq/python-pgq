@@ -28,7 +28,7 @@ class BaseBatchWalker(object):
      - len() after that
     """
 
-    def __init__(self, curs, batch_id, queue_name, fetch_size = 300, consumer_filter = None):
+    def __init__(self, curs, batch_id, queue_name, fetch_size=300, consumer_filter=None):
         self.queue_name = queue_name
         self.fetch_size = fetch_size
         self.sql_cursor = "batch_walker"
@@ -178,7 +178,7 @@ class BaseConsumer(skytools.DBScript):
         self.pgq_autocommit = self.cf.getint("pgq_autocommit", self.pgq_autocommit)
         if self.pgq_autocommit and self.pgq_lazy_fetch:
             raise skytools.UsageError("pgq_autocommit is not compatible with pgq_lazy_fetch")
-        self.set_database_defaults(self.db_name, autocommit = self.pgq_autocommit)
+        self.set_database_defaults(self.db_name, autocommit=self.pgq_autocommit)
 
         self.idle_start = time.time()
 
@@ -212,12 +212,12 @@ class BaseConsumer(skytools.DBScript):
             sys.exit(0)
         return skytools.DBScript.startup(self)
 
-    def init_optparse(self, parser = None):
+    def init_optparse(self, parser=None):
         p = skytools.DBScript.init_optparse(self, parser)
         p.add_option('--register', action='store_true',
-                     help = 'register consumer on queue')
+                     help='register consumer on queue')
         p.add_option('--unregister', action='store_true',
-                     help = 'unregister consumer from queue')
+                     help='unregister consumer from queue')
         return p
 
     def process_event(self, db, event):
@@ -342,7 +342,7 @@ class BaseConsumer(skytools.DBScript):
         t = time.time()
         self.stat_batch_start = t
         if self.stat_batch_start - self.idle_start > self.keepalive_stats:
-            self.stat_put('idle', round(self.stat_batch_start - self.idle_start,4))
+            self.stat_put('idle', round(self.stat_batch_start - self.idle_start, 4))
             self.idle_start = t
 
     def stat_end(self, count):
@@ -350,5 +350,5 @@ class BaseConsumer(skytools.DBScript):
         self.stat_put('count', count)
         self.stat_put('duration', round(t - self.stat_batch_start, 4))
         if count > 0: # reset timer if we got some events
-            self.stat_put('idle', round(self.stat_batch_start - self.idle_start,4))
+            self.stat_put('idle', round(self.stat_batch_start - self.idle_start, 4))
             self.idle_start = t
