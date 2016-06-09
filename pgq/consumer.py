@@ -83,7 +83,7 @@ class RetriableBatchWalker(BaseBatchWalker):
         return self.status_map.get(event.id, (EV_DONE, 0))[0]
 
     def iter_status(self):
-        for res in self.status_map.iteritems():
+        for res in self.status_map.items():
             yield res
 
 
