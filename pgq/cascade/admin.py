@@ -495,7 +495,8 @@ class CascadeAdmin(skytools.AdminScript):
             print('Node %r failure: %s' % (name, msg))
             node = NodeInfo(self.queue_name, None, node_name = name)
         finally:
-            if db: db.close()
+            if db:
+                db.close()
         return node
 
     def cmd_node_status(self):
