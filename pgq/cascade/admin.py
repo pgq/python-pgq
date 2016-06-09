@@ -186,7 +186,7 @@ class CascadeAdmin(skytools.AdminScript):
 
         # check if sane
         ok = 0
-        for k, v in skytools.parse_connect_string(node_location):
+        for k, _ in skytools.parse_connect_string(node_location):
             if k in ('host', 'service'):
                 ok = 1
                 break
@@ -246,8 +246,6 @@ class CascadeAdmin(skytools.AdminScript):
             if queue_info.get_member(node_name) is not None:
                 self.log.error("Node '%s' already exists", node_name)
                 sys.exit(1)
-
-            combined_set = None
 
             provider_db = self.get_database('provider_db', connstr = provider_loc, profile = 'remote')
             q = "select node_type, node_name from pgq_node.get_node_info(%s)"
@@ -448,7 +446,7 @@ class CascadeAdmin(skytools.AdminScript):
         num_nodes = len(self.queue_info.member_map)
         num_threads = max (min (num_nodes / 4, 100), 1)
         tlist = []
-        for i in range(num_threads):
+        for _ in range(num_threads):
             t = threading.Thread (target = self._cmd_status_worker, args = (members, nodes))
             t.daemon = True
             t.start()

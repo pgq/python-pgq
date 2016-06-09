@@ -66,7 +66,7 @@ class CascadedConsumer(BaseConsumer):
             sys.exit(1)
 
         dst_db = self.get_database(self.target_db)
-        dst_curs = dst_db.cursor()
+        #dst_curs = dst_db.cursor()
         src_db = self.get_database(PDB, connstr = provider_loc, profile = 'remote')
         src_curs = src_db.cursor()
 
@@ -94,7 +94,6 @@ class CascadedConsumer(BaseConsumer):
 
     def get_consumer_state(self):
         dst_db = self.get_database(self.target_db)
-        dst_curs = dst_db.cursor()
         q = "select * from pgq_node.get_consumer_state(%s, %s)"
         rows = self.exec_cmd(dst_db, q, [ self.queue_name, self.consumer_name ])
         state = rows[0]
@@ -107,7 +106,7 @@ class CascadedConsumer(BaseConsumer):
     def unregister_consumer(self):
         dst_db = self.get_database(self.target_db)
         state = self.get_consumer_state()
-        src_db = self.get_provider_db(state)
+        self.get_provider_db(state)
 
         # unregister on provider
         BaseConsumer.unregister_consumer(self)
@@ -119,7 +118,6 @@ class CascadedConsumer(BaseConsumer):
     def rewind(self):
         self.log.info("Rewinding queue")
         dst_db = self.get_database(self.target_db)
-        dst_curs = dst_db.cursor()
 
         state = self.get_consumer_state()
         src_db = self.get_provider_db(state)
@@ -197,7 +195,7 @@ class CascadedConsumer(BaseConsumer):
 
         if not self.provider_connstr:
             raise Exception('provider_connstr not set')
-        src_db = self.get_provider_db(self._consumer_state)
+        self.get_provider_db(self._consumer_state)
 
         return BaseConsumer.work(self)
 
