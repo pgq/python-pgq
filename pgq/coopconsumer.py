@@ -72,9 +72,9 @@ class CoopConsumer(Consumer):
             curs.execute(q, [self.queue_name, self.consumer_name, self.subconsumer_name])
         return curs.fetchone()[0]
 
-    def _finish_batch(self, curs, batch_id, list):
+    def _finish_batch(self, curs, batch_id, ev_list):
         """Finish batch. (internal)"""
 
-        self._flush_retry(curs, batch_id, list)
+        self._flush_retry(curs, batch_id, ev_list)
         curs.execute("select pgq_coop.finish_batch(%s)", [batch_id])
 
