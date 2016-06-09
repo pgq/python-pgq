@@ -15,6 +15,7 @@ PDB = '_provider_db'
 
 __all__ = ['CascadedConsumer']
 
+
 class CascadedConsumer(BaseConsumer):
     """CascadedConsumer base class.
 
@@ -42,9 +43,9 @@ class CascadedConsumer(BaseConsumer):
         p = BaseConsumer.init_optparse(self, parser)
         p.add_option("--provider", help="provider location for --register")
         p.add_option("--rewind", action="store_true",
-                help="change queue position according to destination")
+                     help="change queue position according to destination")
         p.add_option("--reset", action="store_true",
-                help="reset queue position on destination side")
+                     help="reset queue position on destination side")
         return p
 
     def startup(self):
@@ -179,7 +180,7 @@ class CascadedConsumer(BaseConsumer):
         """This is called on root node, where no processing should happen.
         """
         # extra sleep
-        time.sleep(10*self.loop_delay)
+        time.sleep(10 * self.loop_delay)
 
         self.log.info('{standby: 1}')
 

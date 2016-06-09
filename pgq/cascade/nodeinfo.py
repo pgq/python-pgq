@@ -15,12 +15,14 @@ ROOT = 'root'
 BRANCH = 'branch'
 LEAF = 'leaf'
 
+
 class MemberInfo(object):
     """Info about set member."""
     def __init__(self, row):
         self.name = row['node_name']
         self.location = row['node_location']
         self.dead = row['dead']
+
 
 def ival2str(iv):
     res = ""
@@ -35,6 +37,7 @@ def ival2str(iv):
     res += "%ds" % secs
     return res
 
+
 class NodeInfo(object):
     """Detailed info about set node."""
 
@@ -45,8 +48,8 @@ class NodeInfo(object):
     completed_tick = None
     provider_node = None
     provider_location = None
-    consumer_name = None #?
-    worker_name = None #?
+    consumer_name = None  # ?
+    worker_name = None    # ?
     paused = False
     uptodate = True
     combined_queue = None
@@ -181,6 +184,7 @@ class NodeInfo(object):
                 cname = row['consumer_name']
                 self.cascaded_consumer_map[cname] = row
 
+
 class QueueInfo(object):
     """Info about cascaded queue.
 
@@ -222,6 +226,7 @@ class QueueInfo(object):
     #
 
     _DATAFMT = "%-30s%s"
+
     def print_tree(self):
         """Print ascii-tree for set.
         Expects that data for all nodes is filled in."""
@@ -287,10 +292,12 @@ class QueueInfo(object):
         node.levels = levels
         node.child_list.sort(key=_node_key)
 
+
 def _setpfx(pfx, sfx):
     if pfx:
         pfx = pfx[:-1] + sfx
     return pfx
+
 
 def _node_key(n):
     return (n.levels, n.total_childs, n.name)

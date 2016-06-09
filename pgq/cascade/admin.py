@@ -111,17 +111,17 @@ class CascadeAdmin(skytools.AdminScript):
         g.add_option("--consumer",
                      help="specify consumer name")
         g.add_option("--target",
-                    help="takeover: specify node to take over")
+                     help="takeover: specify node to take over")
         g.add_option("--merge",
-                    help="create-node: combined queue name")
+                     help="create-node: combined queue name")
         g.add_option("--dead", action="append",
-                    help="tag some node as dead")
+                     help="tag some node as dead")
         g.add_option("--dead-root", action="store_true",
-                    help="tag some node as dead")
+                     help="tag some node as dead")
         g.add_option("--dead-branch", action="store_true",
-                    help="tag some node as dead")
+                     help="tag some node as dead")
         g.add_option("--sync-watermark",
-                    help="list of node names to sync with")
+                     help="list of node names to sync with")
         p.add_option_group(g)
         return p
 
@@ -330,7 +330,7 @@ class CascadeAdmin(skytools.AdminScript):
             failure += 4
 
         if failure:
-            raise UsageError("Public connect string points to different database"\
+            raise UsageError("Public connect string points to different database"
                              " than local connect string (fail=%d)" % failure)
 
     def extra_init(self, node_type, node_db, provider_db):
@@ -420,7 +420,7 @@ class CascadeAdmin(skytools.AdminScript):
             #skytools.DBFunction("txid_current_snapshot", 0, sql_file="txid.sql"),
             skytools.DBSchema("pgq", sql_file="pgq.sql"),
             skytools.DBFunction("pgq.get_batch_cursor", 3, sql_file="pgq.upgrade.2to3.sql"),
-            skytools.DBSchema("pgq_ext", sql_file="pgq_ext.sql"), # not needed actually
+            skytools.DBSchema("pgq_ext", sql_file="pgq_ext.sql"),   # not needed actually
             skytools.DBSchema("pgq_node", sql_file="pgq_node.sql"),
         ]
         objs += self.extra_objs
@@ -533,10 +533,8 @@ class CascadeAdmin(skytools.AdminScript):
         """Change node provider."""
 
         self.load_local_info()
-        self.change_provider(
-                node=self.options.node,
-                consumer=self.options.consumer,
-                new_provider=self.options.provider)
+        self.change_provider(node=self.options.node, consumer=self.options.consumer,
+                             new_provider=self.options.provider)
 
     def node_change_provider(self, node, new_provider):
         self.change_provider(node, new_provider=new_provider)
@@ -1079,7 +1077,7 @@ class CascadeAdmin(skytools.AdminScript):
                 node_db.commit()
                 if len(cons_rows) == 1:
                     if prov_node:
-                        raise Exception('Unexpected situation: there are two gravestones'\
+                        raise Exception('Unexpected situation: there are two gravestones'
                                         ' - on nodes %s and %s' % (prov_node, node_name))
                     prov_node = node_name
                     failover_tick = cons_rows[0]['last_tick']
@@ -1270,13 +1268,13 @@ class CascadeAdmin(skytools.AdminScript):
                 xlist.append(str(tx))
 
         # create where clauses
-        W1 = None
+        where1 = None
         if len(xlist) > 0:
-            W1 = "ev_txid in (%s)" % (",".join(xlist),)
-        W2 = "ev_txid >= %d AND ev_txid <= %d"\
-             " and not txid_visible_in_snapshot(ev_txid, '%s')"\
-             " and     txid_visible_in_snapshot(ev_txid, '%s')" % (
-             s1.xmax, s2.xmax, ticks['s1'], ticks['s2'])
+            where1 = "ev_txid in (%s)" % (",".join(xlist),)
+        where2 = ("ev_txid >= %d AND ev_txid <= %d"                     # noqa
+                  " and not txid_visible_in_snapshot(ev_txid, '%s')"
+                  " and     txid_visible_in_snapshot(ev_txid, '%s')" % (
+                    s1.xmax, s2.xmax, ticks['s1'], ticks['s2']))
 
         # loop over all queue data tables
         q = "select * from pgq.queue where queue_name = %s"
@@ -1293,13 +1291,13 @@ class CascadeAdmin(skytools.AdminScript):
             qtbl = "%s.%s" % (skytools.quote_ident(schema),
                               skytools.quote_ident(table + '_' + str(i)))
             q = "delete from " + qtbl + " where "
-            if W1:
-                self.log.debug(q + W1)
-                curs.execute(q + W1)
+            if where1:
+                self.log.debug(q + where1)
+                curs.execute(q + where1)
                 if curs.rowcount and curs.rowcount > 0:
                     del_count += curs.rowcount
-            self.log.debug(q + W2)
-            curs.execute(q + W2)
+            self.log.debug(q + where2)
+            curs.execute(q + where2)
             if curs.rowcount and curs.rowcount > 0:
                 del_count += curs.rowcount
             total_del_count += del_count
@@ -1321,6 +1319,7 @@ class CascadeAdmin(skytools.AdminScript):
         return stats
 
     _json_dump_file = None
+
     def resurrect_dump_event(self, ev, stats, batch_info):
         if self._json_dump_file is None:
             self._json_dump_file = open(RESURRECT_DUMP_FILE, 'w')
@@ -1405,7 +1404,7 @@ class CascadeAdmin(skytools.AdminScript):
         db = self.get_node_database(node_name)
         if not db:
             self.log.warning("ignoring cmd for dead node '%s': %s",
-                    node_name, skytools.quote_statement(sql, args))
+                             node_name, skytools.quote_statement(sql, args))
             return None
         return self.exec_cmd(db, sql, args, quiet=quiet, prefix=node_name)
 
@@ -1463,6 +1462,7 @@ class CascadeAdmin(skytools.AdminScript):
         self.node_cmd(target_node, q, [self.queue_name, subscriber_node])
 
     _node_cache = {}
+
     def get_node_info(self, node_name):
         """Cached node info lookup."""
         if node_name in self._node_cache:

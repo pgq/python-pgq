@@ -16,6 +16,7 @@ from pgq.event import Event
 
 __all__ = ['CascadedWorker']
 
+
 class WorkerState(object):
     """Depending on node state decides on actions worker needs to do."""
     # node_type,
@@ -90,6 +91,7 @@ class WorkerState(object):
             raise Exception('invalid state 2')
         if ctype and ntype != 'leaf':
             raise Exception('invalid state 3')
+
 
 class CascadedWorker(CascadedConsumer):
     """CascadedWorker base class.
@@ -314,7 +316,7 @@ class CascadedWorker(CascadedConsumer):
         # check if for right queue
         t = ev.ev_type
         if ev.ev_extra1 != self.pgq_queue_name and t != "pgq.tick-id":
-            raise Exception("bad event in queue: "+str(ev))
+            raise Exception("bad event in queue: " + str(ev))
 
         self.log.debug("got cascade event: %s(%s)", t, ev.ev_data)
         st = self._worker_state
