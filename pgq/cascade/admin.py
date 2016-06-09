@@ -513,11 +513,11 @@ class CascadeAdmin(skytools.AdminScript):
         subscriber_nodes = self.get_node_subscriber_list(self.local_node)
 
         offset=4*' '
-        print node.get_title()
-        print offset+'Provider: %s' % node.provider_node
-        print offset+'Subscribers: %s' % ', '.join(subscriber_nodes)
+        print(node.get_title())
+        print(offset + 'Provider: %s' % node.provider_node)
+        print(offset + 'Subscribers: %s' % ', '.join(subscriber_nodes))
         for l in node.get_infolines():
-            print offset+l
+            print(offset + l)
 
     def load_extra_status(self, curs, node):
         """Fetch extra info."""
