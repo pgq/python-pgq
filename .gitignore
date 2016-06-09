@@ -10,11 +10,12 @@ __pycache__
 *.substvars
 *-stamp
 debian/files
-debian/python-skytools
-debian/python3-skytools
+debian/python-*
+debian/python3-*
 
 .tox
 .coverage
+.pybuild
 MANIFEST
 build
 tmp
