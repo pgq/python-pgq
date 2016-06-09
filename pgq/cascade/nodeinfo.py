@@ -15,7 +15,7 @@ ROOT = 'root'
 BRANCH = 'branch'
 LEAF = 'leaf'
 
-class MemberInfo:
+class MemberInfo(object):
     """Info about set member."""
     def __init__(self, row):
         self.name = row['node_name']
@@ -35,7 +35,7 @@ def ival2str(iv):
     res += "%ds" % secs
     return res
 
-class NodeInfo:
+class NodeInfo(object):
     """Detailed info about set node."""
 
     name = None
@@ -181,7 +181,7 @@ class NodeInfo:
                 cname = row['consumer_name']
                 self.cascaded_consumer_map[cname] = row
 
-class QueueInfo:
+class QueueInfo(object):
     """Info about cascaded queue.
 
     Slightly broken, as all info is per-node.

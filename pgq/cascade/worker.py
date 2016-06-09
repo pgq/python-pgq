@@ -16,7 +16,7 @@ from pgq.event import Event
 
 __all__ = ['CascadedWorker']
 
-class WorkerState:
+class WorkerState(object):
     """Depending on node state decides on actions worker needs to do."""
     # node_type,
     # node_name, provider_node,
