@@ -1,45 +1,25 @@
 """PgQ framework for Python."""
 
-__pychecker__ = 'no-miximport'
+from pgq.event import Event
+from pgq.consumer import Consumer
+from pgq.coopconsumer import CoopConsumer
+from pgq.localconsumer import LocalConsumer
+from pgq.producer import bulk_insert_events, insert_event
+from pgq.remoteconsumer import RemoteConsumer, SerialConsumer
+from pgq.status import PGQStatus
 
-import pgq.event
-import pgq.consumer
-import pgq.remoteconsumer
-import pgq.producer
+from pgq.cascade.admin import CascadeAdmin
+from pgq.cascade.consumer import CascadedConsumer
+from pgq.cascade.nodeinfo import MemberInfo, NodeInfo, QueueInfo
+from pgq.cascade.worker import CascadedWorker
 
-import pgq.status
+__all__ = [
+    'Event', 'Consumer', 'CoopConsumer', 'LocalConsumer',
+    'bulk_insert_events', 'insert_event',
+    'RemoteConsumer', 'SerialConsumer', 'PGQStatus',
+    'CascadeAdmin', 'CascadedConsumer', 'CascadedWorker',
+    'MemberInfo', 'NodeInfo', 'QueueInfo'
+]
 
-import pgq.cascade
-import pgq.cascade.nodeinfo
-import pgq.cascade.admin
-import pgq.cascade.consumer
-import pgq.cascade.worker
-
-from pgq.event import *
-from pgq.consumer import *
-from pgq.coopconsumer import *
-from pgq.remoteconsumer import *
-from pgq.localconsumer import *
-from pgq.producer import *
-
-from pgq.status import *
-
-from pgq.cascade.nodeinfo import *
-from pgq.cascade.admin import *
-from pgq.cascade.consumer import *
-from pgq.cascade.worker import *
-
-__all__ = (
-    pgq.event.__all__ +
-    pgq.consumer.__all__ +
-    pgq.coopconsumer.__all__ +
-    pgq.remoteconsumer.__all__ +
-    pgq.localconsumer.__all__ +
-    pgq.cascade.nodeinfo.__all__ +
-    pgq.cascade.admin.__all__ +
-    pgq.cascade.consumer.__all__ +
-    pgq.cascade.worker.__all__ +
-    pgq.producer.__all__ +
-    pgq.status.__all__ )
-
+__version__ = '3.3'
 
