@@ -19,7 +19,7 @@ class RemoteConsumer(Consumer):
     """
 
     def __init__(self, service_name, db_name, remote_db, args):
-        Consumer.__init__(self, service_name, db_name, args)
+        super(RemoteConsumer, self).__init__(service_name, db_name, args)
         self.remote_db = remote_db
 
     def process_batch(self, db, batch_id, event_list):
@@ -70,7 +70,7 @@ class SerialConsumer(Consumer):
     """
 
     def __init__(self, service_name, db_name, remote_db, args):
-        Consumer.__init__(self, service_name, db_name, args)
+        super(SerialConsumer, self).__init__(service_name, db_name, args)
         self.remote_db = remote_db
         self.dst_schema = "pgq_ext"
 
@@ -84,7 +84,7 @@ class SerialConsumer(Consumer):
         return Consumer.startup(self)
 
     def init_optparse(self, parser=None):
-        p = Consumer.init_optparse(self, parser)
+        p = super(SerialConsumer, self).init_optparse(parser)
         p.add_option("--rewind", action="store_true",
                 help="change queue position according to destination")
         p.add_option("--reset", action="store_true",

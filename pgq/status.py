@@ -20,7 +20,7 @@ def ival(data, _as=None):
 class PGQStatus(skytools.DBScript):
     """Info gathering and display."""
     def __init__(self, args, check=0):
-        skytools.DBScript.__init__(self, 'pgqadm', args)
+        super(PGQStatus, self).__init__('pgqadm', args)
 
         self.show_status()
 

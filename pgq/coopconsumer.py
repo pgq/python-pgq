@@ -32,7 +32,7 @@ class CoopConsumer(Consumer):
         @param args: cmdline args for DBScript
         """
 
-        Consumer.__init__(self, service_name, db_name, args)
+        super(CoopConsumer, self).__init__(service_name, db_name, args)
 
         self.subconsumer_name = self.cf.get("subconsumer_name")
         self.subconsumer_timeout = self.cf.get("subconsumer_timeout", "")
