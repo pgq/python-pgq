@@ -1,5 +1,7 @@
 """PgQ framework for Python."""
 
+from __future__ import division, absolute_import, print_function
+
 from pgq.event import Event
 from pgq.consumer import Consumer
 from pgq.coopconsumer import CoopConsumer

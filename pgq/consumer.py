@@ -3,6 +3,8 @@
 
 """
 
+from __future__ import division, absolute_import, print_function
+
 from pgq.baseconsumer import BaseConsumer, BaseBatchWalker
 from pgq.event import Event
 

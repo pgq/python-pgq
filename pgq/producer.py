@@ -2,6 +2,8 @@
 """PgQ producer helpers for Python.
 """
 
+from __future__ import division, absolute_import, print_function
+
 import skytools
 
 __all__ = ['bulk_insert_events', 'insert_event']

@@ -10,6 +10,8 @@ setadm.py INI pause NODE [CONS]
 
 """
 
+from __future__ import division, absolute_import, print_function
+
 import optparse
 import os.path
 import Queue

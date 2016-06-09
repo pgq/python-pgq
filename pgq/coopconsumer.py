@@ -2,6 +2,8 @@
 """PgQ cooperative consumer for Python.
 """
 
+from __future__ import division, absolute_import, print_function
+
 from pgq.consumer import Consumer
 
 __all__ = ['CoopConsumer']

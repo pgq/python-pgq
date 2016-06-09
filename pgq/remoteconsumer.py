@@ -4,6 +4,8 @@ old RemoteConsumer / SerialConsumer classes.
 
 """
 
+from __future__ import division, absolute_import, print_function
+
 import sys
 
 from pgq.consumer import Consumer

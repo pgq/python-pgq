@@ -3,6 +3,8 @@
 """Info about node/set/members.  For admin tool.
 """
 
+from __future__ import division, absolute_import, print_function
+
 __all__ = ['MemberInfo', 'NodeInfo', 'QueueInfo']
 
 import datetime
