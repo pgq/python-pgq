@@ -6,7 +6,8 @@ Does not maintain node, but is able to pause, resume and switch provider.
 
 from __future__ import division, absolute_import, print_function
 
-import sys, time
+import sys
+import time
 
 from pgq.baseconsumer import BaseConsumer
 

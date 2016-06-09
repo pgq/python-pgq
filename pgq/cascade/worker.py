@@ -6,7 +6,9 @@ CascadedConsumer that also maintains node.
 
 from __future__ import division, absolute_import, print_function
 
-import sys, time, skytools
+import sys
+import time
+import skytools
 
 from pgq.cascade.consumer import CascadedConsumer
 from pgq.producer import bulk_insert_events

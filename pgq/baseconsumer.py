@@ -9,7 +9,9 @@ todo:
 
 from __future__ import division, absolute_import, print_function
 
-import sys, time, skytools
+import sys
+import time
+import skytools
 
 from pgq.event import *
 

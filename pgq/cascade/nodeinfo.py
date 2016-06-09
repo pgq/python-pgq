@@ -5,10 +5,10 @@
 
 from __future__ import division, absolute_import, print_function
 
-__all__ = ['MemberInfo', 'NodeInfo', 'QueueInfo']
-
 import datetime
 import skytools
+
+__all__ = ['MemberInfo', 'NodeInfo', 'QueueInfo']
 
 # node types
 ROOT = 'root'
