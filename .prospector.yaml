@@ -1,0 +1,37 @@
+
+strictness: high
+
+max-line-length: 120
+
+member-warnings: true
+
+doc-warnings: false
+
+test-warnings: false
+
+pylint:
+  options:
+    init-import: true
+    dummy-variables-rgx: _$|dummy|___
+
+  disable:
+    # register_consumer
+    - arguments-differ
+    # optparse
+    - deprecated-module
+
+    - bare-except
+    - invalid-name
+    - no-self-use
+    - protected-access
+    - too-many-arguments
+    - too-many-branches
+    - too-many-instance-attributes
+    - too-many-lines
+    - too-many-locals
+    - too-many-statements
+    - unused-argument
+
+mccabe:
+  run: false
+
