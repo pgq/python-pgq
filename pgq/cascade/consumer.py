@@ -232,7 +232,7 @@ class CascadedConsumer(BaseConsumer):
             self.close_database(PDB)
             self.provider_connstr = loc
             # re-initialize provider connection
-            db = self.get_provider_db(state);
+            self.get_provider_db(state)
 
         return state
 

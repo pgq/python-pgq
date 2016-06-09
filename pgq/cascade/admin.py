@@ -382,7 +382,7 @@ class CascadeAdmin(skytools.AdminScript):
 
     def find_consumer_check(self, node, consumer):
         cmap = self.get_node_consumer_map(node)
-        return (consumer in cmap)
+        return consumer in cmap
 
     def find_consumer(self, node = None, consumer = None):
         if not node and not consumer:
@@ -1013,7 +1013,7 @@ class CascadeAdmin(skytools.AdminScript):
             dst_db.commit()
 
             if row['ret_code'] >= 300:
-                self.log.warning("Problem: %s", row['ret_code'], row['ret_note'])
+                self.log.warning("Problem: [%s] %s", row['ret_code'], row['ret_note'])
                 return
 
             if row['worker_last_tick'] > tick_id:
@@ -1099,7 +1099,7 @@ class CascadeAdmin(skytools.AdminScript):
                     node_db = None
 
         if not root_node:
-            self.log.error("Cannot find new root node", failover_cons)
+            self.log.error("Cannot find new root node")
             sys.exit(1)
         if not prov_node:
             self.log.error("Cannot find failover position (%s)", failover_cons)

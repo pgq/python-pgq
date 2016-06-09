@@ -250,7 +250,7 @@ class BaseConsumer(skytools.DBScript):
         # acquire batch
         batch_id = self._load_next_batch(curs)
         db.commit()
-        if batch_id == None:
+        if batch_id is None:
             return 0
 
         # load events
