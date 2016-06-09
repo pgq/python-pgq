@@ -232,7 +232,8 @@ class CascadeAdmin(skytools.AdminScript):
             self.exec_cmd(db, "select * from pgq_node.register_location(%s, %s, %s, false)",
                           [self.queue_name, node_name, node_location])
             self.exec_cmd(db, "select * from pgq_node.create_node(%s, %s, %s, %s, %s, %s, %s)",
-                          [self.queue_name, node_type, node_name, worker_name, provider_name, global_watermark, combined_queue])
+                          [self.queue_name, node_type, node_name, worker_name, provider_name,
+                           global_watermark, combined_queue])
             provider_db = None
         else:
             if not provider_loc:
@@ -331,7 +332,8 @@ class CascadeAdmin(skytools.AdminScript):
             failure += 4
 
         if failure:
-            raise UsageError("Public connect string points to different database than local connect string (fail=%d)" % failure)
+            raise UsageError("Public connect string points to different database"\
+                             " than local connect string (fail=%d)" % failure)
 
     def extra_init(self, node_type, node_db, provider_db):
         """Callback to do specific init."""
@@ -1078,7 +1080,8 @@ class CascadeAdmin(skytools.AdminScript):
                 node_db.commit()
                 if len(cons_rows) == 1:
                     if prov_node:
-                        raise Exception('Unexpected situation: there are two gravestones - on nodes %s and %s' % (prov_node, node_name))
+                        raise Exception('Unexpected situation: there are two gravestones'\
+                                        ' - on nodes %s and %s' % (prov_node, node_name))
                     prov_node = node_name
                     failover_tick = cons_rows[0]['last_tick']
                     self.log.info("Found gravestone on node: %s", node_name)
@@ -1172,7 +1175,8 @@ class CascadeAdmin(skytools.AdminScript):
         self.exec_cmd(prov_curs, q, [self.queue_name, this_node], quiet = True)
         q = "select ret_code, ret_note, global_watermark"\
             " from pgq_node.register_subscriber(%s, %s, %s, %s)"
-        res = self.exec_cmd(prov_curs, q, [self.queue_name, this_node, state['worker_name'], failover_tick], quiet = True)
+        res = self.exec_cmd(prov_curs, q, [self.queue_name, this_node, state['worker_name'],
+                                           failover_tick], quiet = True)
         global_wm = res[0]['global_watermark']
         prov_db.commit()
 

@@ -136,8 +136,10 @@ class CascadedWorker(CascadedConsumer):
     def reload(self):
         CascadedConsumer.reload(self)
 
-        self.global_wm_publish_period = self.cf.getfloat('global_wm_publish_period', CascadedWorker.global_wm_publish_period)
-        self.local_wm_publish_period = self.cf.getfloat('local_wm_publish_period', CascadedWorker.local_wm_publish_period)
+        self.global_wm_publish_period = self.cf.getfloat('global_wm_publish_period',
+                                                         CascadedWorker.global_wm_publish_period)
+        self.local_wm_publish_period = self.cf.getfloat('local_wm_publish_period',
+                                                        CascadedWorker.local_wm_publish_period)
 
     def process_remote_batch(self, src_db, tick_id, event_list, dst_db):
         """Worker-specific event processing."""
