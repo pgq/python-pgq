@@ -13,7 +13,7 @@ import sys
 import time
 import skytools
 
-from pgq.event import *
+from pgq.event import Event
 
 __all__ = ['BaseConsumer', 'BaseBatchWalker']
 

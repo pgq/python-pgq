@@ -21,7 +21,7 @@ import time
 
 import skytools
 from skytools import UsageError, DBError
-from pgq.cascade.nodeinfo import *
+from pgq.cascade.nodeinfo import NodeInfo, QueueInfo
 
 __all__ = ['CascadeAdmin']
 
