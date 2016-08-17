@@ -9,6 +9,7 @@ X-Python3-Version: >= 3.5
 
 Package: python-pgq
 Architecture: all
+Conflicts: python-pgq3
 Depends: ${misc:Depends}, ${python:Depends}
 Description: PgQ queue processing for Python
  .
