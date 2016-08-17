@@ -448,7 +448,7 @@ class CascadeAdmin(skytools.AdminScript):
 
         # launch workers and wait
         num_nodes = len(self.queue_info.member_map)
-        num_threads = max(min(num_nodes / 4, 100), 1)
+        num_threads = max(min(num_nodes // 4, 100), 1)
         tlist = []
         for _ in range(num_threads):
             t = threading.Thread(target=self._cmd_status_worker, args=(members, nodes))
