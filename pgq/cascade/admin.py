@@ -126,6 +126,8 @@ class CascadeAdmin(skytools.AdminScript):
                      help="tag some node as dead")
         g.add_option("--sync-watermark",
                      help="list of node names to sync with")
+        g.add_option("--nocheck",
+                     help="create: do not check public connect string")
         p.add_option_group(g)
         return p
 
@@ -302,6 +304,8 @@ class CascadeAdmin(skytools.AdminScript):
     def check_public_connstr(self, db, pub_connstr):
         """Look if public and local connect strings point to same db's.
         """
+        if self.options.nocheck:
+            return
         pub_db = self.get_database("pub_db", connstr=pub_connstr, profile='remote')
         curs1 = db.cursor()
         curs2 = pub_db.cursor()
