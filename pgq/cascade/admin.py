@@ -126,7 +126,7 @@ class CascadeAdmin(skytools.AdminScript):
                      help="tag some node as dead")
         g.add_option("--sync-watermark",
                      help="list of node names to sync with")
-        g.add_option("--nocheck",
+        g.add_option("--nocheck", action="store_true",
                      help="create: do not check public connect string")
         p.add_option_group(g)
         return p
