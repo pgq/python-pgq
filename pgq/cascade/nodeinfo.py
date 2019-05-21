@@ -205,7 +205,7 @@ class QueueInfo(object):
             m = MemberInfo(r)
             self._add_member(m)
 
-        m = self.member_rows[info_row['node_name']]
+        m = self.member_map[info_row['node_name']]
 
         self.local_node = NodeInfo(queue_name, info_row, location=m.location)
         self.queue_name = queue_name
