@@ -487,7 +487,7 @@ class CascadeAdmin(skytools.AdminScript):
         """ Load node info & status """
         # must be thread-safe (!)
         if not self.node_alive(name):
-            node = NodeInfo(self.queue_name, None, node_name=name)
+            node = NodeInfo(self.queue_name, None, node_name=name, location=location)
             return node
         try:
             db = None
@@ -495,13 +495,13 @@ class CascadeAdmin(skytools.AdminScript):
             db.set_isolation_level(skytools.I_AUTOCOMMIT)
             curs = db.cursor()
             curs.execute("select * from pgq_node.get_node_info(%s)", [self.queue_name])
-            node = NodeInfo(self.queue_name, curs.fetchone())
+            node = NodeInfo(self.queue_name, curs.fetchone(), location=location)
             node.load_status(curs)
             self.load_extra_status(curs, node)
         except DBError as d:
             msg = str(d).strip().split('\n', 1)[0].strip()
             print('Node %r failure: %s' % (name, msg))
-            node = NodeInfo(self.queue_name, None, node_name=name)
+            node = NodeInfo(self.queue_name, None, node_name=name, location=location)
         finally:
             if db:
                 db.close()
@@ -1487,7 +1487,8 @@ class CascadeAdmin(skytools.AdminScript):
             return None
         q = "select * from pgq_node.get_node_info(%s)"
         rows = self.exec_query(db, q, [self.queue_name])
-        return NodeInfo(self.queue_name, rows[0])
+        m = self.queue_info.get_member(node_name)
+        return NodeInfo(self.queue_name, rows[0], location=m.location)
 
     def load_queue_info(self, db):
         """Non-cached set info lookup."""

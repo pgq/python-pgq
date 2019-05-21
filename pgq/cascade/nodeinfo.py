@@ -23,11 +23,6 @@ class MemberInfo(object):
         self.name = row['node_name']
         self.location = row['node_location']
         self.dead = row['dead']
-        self.service = None
-
-        m = re.search(r'service=(\S+)', self.location)
-        if m:
-            self.service = m.group(1)
 
 
 def ival2str(iv):
@@ -64,7 +59,7 @@ class NodeInfo(object):
     node_attrs = {}
     service = None
 
-    def __init__(self, queue_name, row, main_worker=True, node_name=None, member_map=None):
+    def __init__(self, queue_name, row, main_worker=True, node_name=None, location=None):
         self.queue_name = queue_name
         self.main_worker = main_worker
 
@@ -75,6 +70,11 @@ class NodeInfo(object):
         self.cascaded_consumer_map = {}
 
         self._row = row
+
+        if location:
+            m = re.search(r'service=(\S+)', location)
+            if m:
+                self.service = m.group(1)
 
         if not row:
             self.name = node_name
@@ -101,11 +101,6 @@ class NodeInfo(object):
             a = row['node_attrs']
             if a:
                 self.node_attrs = skytools.db_urldecode(a)
-
-        if member_map:
-            m = member_map.get(self.name)
-            if m and m.service:
-                self.service = m.service
 
     def __get_target_queue(self):
         qname = None
@@ -210,7 +205,9 @@ class QueueInfo(object):
             m = MemberInfo(r)
             self._add_member(m)
 
-        self.local_node = NodeInfo(queue_name, info_row, member_map=self.member_map)
+        m = self.member_rows[info_row['node_name']]
+
+        self.local_node = NodeInfo(queue_name, info_row, location=m.location)
         self.queue_name = queue_name
         self.node_map = {}
         self.add_node(self.local_node)
