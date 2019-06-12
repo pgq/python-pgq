@@ -172,6 +172,7 @@ class CascadedWorker(CascadedConsumer):
         """On combined-branch leaf needs to wait from tick
         to appear from combined-root.
         """
+        dst_db.commit()
         while 1:
             cst = self._consumer_state
             if cst['completed_tick'] >= tick_id:
