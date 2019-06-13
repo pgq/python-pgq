@@ -147,11 +147,11 @@ class CascadedWorker(CascadedConsumer):
         """Worker-specific event processing."""
         self.ev_buf = []
         max_id = 0
-        st = self._worker_state
 
-        if st.wait_behind:
+        if self._worker_state.wait_behind:
             self.wait_for_tick(dst_db, tick_id)
 
+        st = self._worker_state
         src_curs = src_db.cursor()
         dst_curs = dst_db.cursor()
         for ev in event_list:
