@@ -5,8 +5,8 @@ from setuptools import setup
 
 setup(
     name = "pgq",
-    description = "PgQ consumer for Python",
-    version = '3.3',
+    description = "PgQ client library for Python",
+    version = '3.4',
     license = "ISC",
     url = "https://github.com/pgq/python-pgq",
     maintainer = "Marko Kreen",
@@ -22,10 +22,7 @@ setup(
         "Operating System :: Microsoft :: Windows",
         "Operating System :: POSIX",
         "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
         "Topic :: Database",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Utilities",
