@@ -6,7 +6,7 @@ from setuptools import setup
 setup(
     name = "pgq",
     description = "PgQ client library for Python",
-    version = '3.4',
+    version = '3.4.1',
     license = "ISC",
     url = "https://github.com/pgq/python-pgq",
     maintainer = "Marko Kreen",
