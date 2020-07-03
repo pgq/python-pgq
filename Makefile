@@ -14,7 +14,9 @@ xclean: clean
 	rm -rf .tox dist
 
 sdist:
+	rm -f dist/*
 	python3 setup.py sdist
 
 upload:
 	twine upload dist/*.gz
+
