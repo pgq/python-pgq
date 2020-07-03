@@ -12,7 +12,7 @@ setup(
     maintainer = "Marko Kreen",
     maintainer_email = "markokr@gmail.com",
     packages = ['pgq', 'pgq.cascade'],
-    install_requires = ['skytools', 'psycopg2'],
+    install_requires = ['skytools'],
     classifiers = [
         "Development Status :: 5 - Production/Stable",
         "Environment :: Console",
