@@ -1,9 +1,5 @@
-
 """PgQ consumer framework for Python.
-
 """
-
-from __future__ import absolute_import, division, print_function
 
 from pgq.baseconsumer import BaseBatchWalker, BaseConsumer
 from pgq.event import Event

@@ -1,7 +1,3 @@
-#! /usr/bin/env python
-
-## NB: not all commands work ##
-
 """Cascaded queue administration.
 
 londiste.py INI pause [NODE [CONS]]
@@ -10,7 +6,7 @@ setadm.py INI pause NODE [CONS]
 
 """
 
-from __future__ import absolute_import, division, print_function
+## NB: not all commands work ##
 
 import optparse
 import os.path

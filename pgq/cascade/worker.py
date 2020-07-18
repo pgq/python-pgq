@@ -1,10 +1,7 @@
 """Cascaded worker.
 
 CascadedConsumer that also maintains node.
-
 """
-
-from __future__ import absolute_import, division, print_function
 
 import sys
 import time

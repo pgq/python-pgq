@@ -1,10 +1,7 @@
 """Cascaded consumer.
 
-
 Does not maintain node, but is able to pause, resume and switch provider.
 """
-
-from __future__ import absolute_import, division, print_function
 
 import sys
 import time

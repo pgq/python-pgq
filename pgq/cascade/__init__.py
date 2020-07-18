@@ -1,4 +1,3 @@
-"""Cascaded Queue support."""
-
-from __future__ import absolute_import, division, print_function
+"""Cascaded Queue support.
+"""
 

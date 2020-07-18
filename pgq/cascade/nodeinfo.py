@@ -1,9 +1,5 @@
-#! /usr/bin/env python
-
 """Info about node/set/members.  For admin tool.
 """
-
-from __future__ import absolute_import, division, print_function
 
 import datetime
 import re

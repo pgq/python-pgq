@@ -1,15 +1,10 @@
-
-"""
-Consumer that stores last applied position in local file.
+"""Consumer that stores last applied position in local file.
 
 For cases where the consumer cannot use single database for remote tracking.
 
 To be subclassed, then override .process_local_batch() or .process_local_event()
 methods.
-
 """
-
-from __future__ import absolute_import, division, print_function
 
 import errno
 import os

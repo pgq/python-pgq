@@ -1,7 +1,5 @@
 """PgQ framework for Python."""
 
-from __future__ import absolute_import, division, print_function
-
 from pgq.cascade.admin import CascadeAdmin
 from pgq.cascade.consumer import CascadedConsumer
 from pgq.cascade.nodeinfo import MemberInfo, NodeInfo, QueueInfo

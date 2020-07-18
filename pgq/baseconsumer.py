@@ -1,13 +1,9 @@
-
 """PgQ consumer framework for Python.
 
 todo:
     - pgq.next_batch_details()
     - tag_done() by default
-
 """
-
-from __future__ import absolute_import, division, print_function
 
 import sys
 import time
