@@ -7,10 +7,11 @@ todo:
 
 """
 
-from __future__ import division, absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
 import sys
 import time
+
 import skytools
 
 from pgq.event import Event
@@ -35,7 +36,7 @@ class BaseBatchWalker(object):
         self.curs = curs
         self.length = 0
         self.batch_id = batch_id
-        self.fetch_status = 0 # 0-not started, 1-in-progress, 2-done
+        self.fetch_status = 0  # 0-not started, 1-in-progress, 2-done
         self.consumer_filter = consumer_filter
 
     def _make_event(self, queue_name, row):
@@ -51,7 +52,7 @@ class BaseBatchWalker(object):
         # this will return first batch of rows
 
         q = "fetch %d from %s" % (self.fetch_size, self.sql_cursor)
-        while 1:
+        while True:
             rows = self.curs.fetchall()
             if not len(rows):
                 break
@@ -272,7 +273,7 @@ class BaseConsumer(skytools.DBScript):
         db = self.get_database(self.db_name)
         cx = db.cursor()
         cx.execute("select pgq.register_consumer(%s, %s)",
-                [self.queue_name, self.consumer_name])
+                   [self.queue_name, self.consumer_name])
         res = cx.fetchone()[0]
         db.commit()
 
@@ -283,7 +284,7 @@ class BaseConsumer(skytools.DBScript):
         db = self.get_database(self.db_name)
         cx = db.cursor()
         cx.execute("select pgq.unregister_consumer(%s, %s)",
-                [self.queue_name, self.consumer_name])
+                   [self.queue_name, self.consumer_name])
         db.commit()
 
     def _launch_process_batch(self, db, batch_id, ev_list):
@@ -349,6 +350,7 @@ class BaseConsumer(skytools.DBScript):
         t = time.time()
         self.stat_put('count', count)
         self.stat_put('duration', round(t - self.stat_batch_start, 4))
-        if count > 0: # reset timer if we got some events
+        if count > 0:  # reset timer if we got some events
             self.stat_put('idle', round(self.stat_batch_start - self.idle_start, 4))
             self.idle_start = t
+

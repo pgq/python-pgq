@@ -3,9 +3,9 @@
 
 """
 
-from __future__ import division, absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
-from pgq.baseconsumer import BaseConsumer, BaseBatchWalker
+from pgq.baseconsumer import BaseBatchWalker, BaseConsumer
 from pgq.event import Event
 
 __all__ = ['Consumer']
@@ -131,4 +131,5 @@ class Consumer(BaseConsumer):
     def _tag_retry(self, cx, batch_id, ev_id, retry_time):
         """Tag event for retry. (internal)"""
         cx.execute("select pgq.event_retry(%s, %s, %s)",
-                    [batch_id, ev_id, retry_time])
+                   [batch_id, ev_id, retry_time])
+

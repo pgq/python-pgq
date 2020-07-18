@@ -10,7 +10,7 @@ setadm.py INI pause NODE [CONS]
 
 """
 
-from __future__ import division, absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
 import optparse
 import os.path
@@ -24,8 +24,8 @@ except ImportError:
     import Queue    # noqa
 
 import skytools
-from skytools import UsageError, DBError
 from pgq.cascade.nodeinfo import NodeInfo, QueueInfo
+from skytools import DBError, UsageError
 
 __all__ = ['CascadeAdmin']
 
@@ -354,7 +354,7 @@ class CascadeAdmin(skytools.AdminScript):
             loc = self.cf.get(self.initial_db_name)
             db = self.get_database('root_db', connstr=loc)
 
-        while 1:
+        while True:
             # query current status
             res = self.exec_query(db, "select * from pgq_node.get_node_info(%s)", [self.queue_name])
             info = res[0]
@@ -694,7 +694,7 @@ class CascadeAdmin(skytools.AdminScript):
     def node_depends(self, sub_node, top_node):
         cur_node = sub_node
         # walk upstream
-        while 1:
+        while True:
             info = self.get_node_info(cur_node)
             if cur_node == top_node:
                 # yes, top_node is sub_node's provider
@@ -727,7 +727,7 @@ class CascadeAdmin(skytools.AdminScript):
         if info.paused:
             self.log.info('new node seems paused, resuming')
             self.resume_node(new)
-        while 1:
+        while True:
             self.log.debug('waiting for catchup: need=%d, cur=%d', last_tick, info.completed_tick)
             time.sleep(1)
             info = self.load_node_info(new)
@@ -1012,7 +1012,7 @@ class CascadeAdmin(skytools.AdminScript):
         q = "select * from pgq_node.get_node_info(%s)"
         dst_curs = dst_db.cursor()
 
-        while 1:
+        while True:
             dst_curs.execute(q, [self.queue_name])
             row = dst_curs.fetchone()
             dst_db.commit()
@@ -1193,8 +1193,7 @@ class CascadeAdmin(skytools.AdminScript):
         # show stats
         if stats:
             self.log.info("** Statistics **")
-            klist = stats.keys()
-            klist.sort()
+            klist = sorted(stats.keys())
             for k in klist:
                 v = stats[k]
                 self.log.info("  %s: %s", k, v)
@@ -1216,7 +1215,7 @@ class CascadeAdmin(skytools.AdminScript):
         total_count = 0
         final_tick_id = -1
         stats = {}
-        while 1:
+        while True:
             q = "select * from pgq.next_batch_info(%s, %s)"
             curs.execute(q, [self.queue_name, cons_name])
             b = curs.fetchone()
@@ -1427,7 +1426,7 @@ class CascadeAdmin(skytools.AdminScript):
         self.node_cmd(node, q, [self.queue_name, consumer, pause_flag])
 
         self.log.info('Waiting for worker to accept')
-        while 1:
+        while True:
             q = "select * from pgq_node.get_consumer_state(%s, %s)"
             stat = self.node_cmd(node, q, [self.queue_name, consumer], quiet=True)[0]
             if stat['paused'] != pause_flag:
@@ -1522,6 +1521,8 @@ class CascadeAdmin(skytools.AdminScript):
             res[r['consumer_name']] = r
         return res
 
+
 if __name__ == '__main__':
     script = CascadeAdmin('setadm', 'node_db', sys.argv[1:], worker_setup=False)
     script.start()
+

@@ -2,11 +2,12 @@
 """PgQ cooperative consumer for Python.
 """
 
-from __future__ import division, absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
 from pgq.consumer import Consumer
 
 __all__ = ['CoopConsumer']
+
 
 class CoopConsumer(Consumer):
     """Cooperative Consumer base class.
@@ -44,7 +45,7 @@ class CoopConsumer(Consumer):
         db = self.get_database(self.db_name)
         cx = db.cursor()
         cx.execute("select pgq_coop.register_subconsumer(%s, %s, %s)",
-                [self.queue_name, self.consumer_name, self.subconsumer_name])
+                   [self.queue_name, self.consumer_name, self.subconsumer_name])
         res = cx.fetchone()[0]
         db.commit()
 
@@ -57,9 +58,8 @@ class CoopConsumer(Consumer):
         db = self.get_database(self.db_name)
         cx = db.cursor()
         cx.execute("select pgq_coop.unregister_subconsumer(%s, %s, %s, 0)",
-                    [self.queue_name, self.consumer_name, self.subconsumer_name])
+                   [self.queue_name, self.consumer_name, self.subconsumer_name])
         db.commit()
-
 
     def _load_next_batch(self, curs):
         """Allocate next batch. (internal)"""

@@ -4,7 +4,7 @@
 Does not maintain node, but is able to pause, resume and switch provider.
 """
 
-from __future__ import division, absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
 import sys
 import time
@@ -207,7 +207,7 @@ class CascadedConsumer(BaseConsumer):
         "uptodate" flag to notify that data is refreshed.
         """
 
-        while 1:
+        while True:
             q = "select * from pgq_node.get_consumer_state(%s, %s)"
             rows = self.exec_cmd(dst_db, q, [self.queue_name, self.consumer_name])
             state = rows[0]
@@ -289,7 +289,8 @@ class CascadedConsumer(BaseConsumer):
             dst_db = self.get_database(self.target_db)
             q = "select * from pgq_node.set_consumer_error(%s, %s, %s)"
             self.exec_cmd(dst_db, q, [self.queue_name, self.consumer_name, emsg])
-        except:
+        except BaseException:
             self.log.warning("Failure to call pgq_node.set_consumer_error()")
         self.reset()
         super(CascadedConsumer, self).exception_hook(det, emsg)
+

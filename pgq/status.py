@@ -2,12 +2,14 @@
 """Status display.
 """
 
-from __future__ import division, absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
 import sys
+
 import skytools
 
 __all__ = ['PGQStatus']
+
 
 def ival(data, _as=None):
     "Format interval for output"
@@ -16,6 +18,7 @@ def ival(data, _as=None):
     numfmt = 'FM9999999'
     expr = "coalesce(to_char(extract(epoch from %s), '%s') || 's', 'NULL') as %s"
     return expr % (data, numfmt, _as)
+
 
 class PGQStatus(skytools.DBScript):
     """Info gathering and display."""
@@ -41,29 +44,29 @@ class PGQStatus(skytools.DBScript):
                       f.ev_per_sec, f.ev_new
                 from pgq.get_queue_info() f, pgq.queue q
                where q.queue_name = f.queue_name""" % (
-                    ival('f.queue_rotation_period'),
-                    ival('f.ticker_lag'),
-                    ival('q.queue_ticker_max_lag'),
-                    ival('q.queue_ticker_idle_period'),
-               )
+            ival('f.queue_rotation_period'),
+            ival('f.ticker_lag'),
+            ival('q.queue_ticker_max_lag'),
+            ival('q.queue_ticker_idle_period'),
+        )
         cx.execute(q)
         event_rows = cx.fetchall()
 
         q = """select queue_name, consumer_name, %s, %s, pending_events
                from pgq.get_consumer_info()""" % (
-                ival('lag'),
-                ival('last_seen'),
-              )
+            ival('lag'),
+            ival('last_seen'),
+        )
         cx.execute(q)
         consumer_rows = cx.fetchall()
 
         print("\n%-33s %9s %13s %6s %6s %5s" % ('Event queue',
-                            'Rotation', 'Ticker', 'TLag', 'EPS', 'New'))
+                                                'Rotation', 'Ticker', 'TLag', 'EPS', 'New'))
         print('-' * 78)
         for ev_row in event_rows:
             tck = "%s/%s/%s" % (ev_row['queue_ticker_max_count'],
-                    ev_row['queue_ticker_max_lag'],
-                    ev_row['queue_ticker_idle_period'])
+                                ev_row['queue_ticker_max_lag'],
+                                ev_row['queue_ticker_idle_period'])
             rot = "%s/%s" % (ev_row['queue_ntables'], ev_row['queue_rotation_period'])
             print("%-33s %9s %13s %6s %6.1f %5d" % (
                 ev_row['queue_name'],
@@ -75,7 +78,7 @@ class PGQStatus(skytools.DBScript):
             ))
         print('-' * 78)
         print("\n%-48s %9s %9s %8s" % (
-                'Consumer', 'Lag', 'LastSeen', 'Pending'))
+            'Consumer', 'Lag', 'LastSeen', 'Pending'))
         print('-' * 78)
         for ev_row in event_rows:
             cons = self.pick_consumers(ev_row, consumer_rows)
@@ -85,15 +88,14 @@ class PGQStatus(skytools.DBScript):
 
     def show_consumer(self, cons):
         print("  %-46s %9s %9s %8d" % (
-                    cons['consumer_name'],
-                    cons['lag'], cons['last_seen'],
-                    cons['pending_events']))
+            cons['consumer_name'],
+            cons['lag'], cons['last_seen'],
+            cons['pending_events']))
 
     def show_queue(self, ev_row, consumer_rows):
         print("%(queue_name)s:" % ev_row)
         for cons in consumer_rows:
             self.show_consumer(cons)
-
 
     def pick_consumers(self, ev_row, consumer_rows):
         res = []

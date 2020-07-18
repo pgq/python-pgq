@@ -3,10 +3,11 @@
 """Info about node/set/members.  For admin tool.
 """
 
-from __future__ import division, absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
 import datetime
 import re
+
 import skytools
 
 __all__ = ['MemberInfo', 'NodeInfo', 'QueueInfo']
@@ -212,7 +213,6 @@ class QueueInfo(object):
         self.node_map = {}
         self.add_node(self.local_node)
 
-
     def _add_member(self, member):
         self.member_map[member.name] = member
 
@@ -312,3 +312,4 @@ def _setpfx(pfx, sfx):
 
 def _node_key(n):
     return (n.levels, n.total_childs, n.name)
+

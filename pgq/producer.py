@@ -2,7 +2,7 @@
 """PgQ producer helpers for Python.
 """
 
-from __future__ import division, absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
 import skytools
 
@@ -28,12 +28,14 @@ _fldmap = {
     'ev_extra4': 'ev_extra4',
 }
 
+
 def bulk_insert_events(curs, rows, fields, queue_name):
     q = "select pgq.current_event_table(%s)"
     curs.execute(q, [queue_name])
     tbl = curs.fetchone()[0]
     db_fields = map(_fldmap.get, fields)
     skytools.magic_insert(curs, tbl, rows, db_fields)
+
 
 def insert_event(curs, queue, ev_type, ev_data,
                  extra1=None, extra2=None,

@@ -9,15 +9,18 @@ methods.
 
 """
 
-from __future__ import division, absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
-import sys
-import os
 import errno
+import os
+import sys
+
 import skytools
+
 from pgq.baseconsumer import BaseConsumer
 
 __all__ = ['LocalConsumer']
+
 
 class LocalConsumer(BaseConsumer):
     """Consumer that applies batches sequentially in second database.
@@ -49,9 +52,9 @@ class LocalConsumer(BaseConsumer):
     def init_optparse(self, parser=None):
         p = super(LocalConsumer, self).init_optparse(parser)
         p.add_option("--rewind", action="store_true",
-                help="change queue position according to local tick")
+                     help="change queue position according to local tick")
         p.add_option("--reset", action="store_true",
-                help="reset local tick based on queue position")
+                     help="reset local tick based on queue position")
         return p
 
     def startup(self):
@@ -164,7 +167,7 @@ class LocalConsumer(BaseConsumer):
 
     def register_consumer(self):
         new = super(LocalConsumer, self).register_consumer()
-        if new: # fixme
+        if new:  # fixme
             self.dst_reset()
 
     def unregister_consumer(self):
@@ -191,7 +194,7 @@ class LocalConsumer(BaseConsumer):
         self.log.info("Removing local tracking file")
         try:
             os.remove(self.local_tracking_file)
-        except:
+        except BaseException:
             pass
 
     def load_local_tick(self):
@@ -215,3 +218,4 @@ class LocalConsumer(BaseConsumer):
         """Store tick in local file."""
         data = str(tick_id)
         skytools.write_atomic(self.local_tracking_file, data)
+

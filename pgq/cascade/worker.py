@@ -4,15 +4,15 @@ CascadedConsumer that also maintains node.
 
 """
 
-from __future__ import division, absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
 import sys
 import time
-import skytools
 
+import skytools
 from pgq.cascade.consumer import CascadedConsumer
-from pgq.producer import bulk_insert_events
 from pgq.event import Event
+from pgq.producer import bulk_insert_events
 
 __all__ = ['CascadedWorker']
 
@@ -173,7 +173,7 @@ class CascadedWorker(CascadedConsumer):
         to appear from combined-root.
         """
         dst_db.commit()
-        while 1:
+        while True:
             cst = self._consumer_state
             if cst['completed_tick'] >= tick_id:
                 return
@@ -453,3 +453,4 @@ class CascadedWorker(CascadedConsumer):
         dst_curs.execute(q, [self.pgq_queue_name])
         dst_db.commit()
         self.global_wm_publish_time = t
+
