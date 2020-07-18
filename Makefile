@@ -20,3 +20,6 @@ sdist:
 upload:
 	twine upload dist/*.gz
 
+test:
+	TEST_DB_NAME=testdb TEST_Q_NAME=testq PGHOST=/tmp PGPORT=5120 tox -e py38
+

@@ -1,3 +1,9 @@
+python-pgq (3.5a1-1) stable; urgency=low
+
+  * v3.5
+
+ -- Marko Kreen <markokr@gmail.com>  Sat, 18 Jul 2020 22:39:50 +0300
+
 python-pgq (3.4.1-1) stable; urgency=low
 
   * v3.4.1

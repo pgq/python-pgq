@@ -30,50 +30,18 @@ jobs:
       - name: "Install tox"
         run: python -m pip -q install tox
 
-      - name: "Test"
+      - name: "Run checker"
         env:
            TOXENV: ${{matrix.test.TOXENV}}
         run: python -m tox -r
 
-  no_database:
-    name: "${{matrix.test.osname}} + Python ${{matrix.test.PY}}"
-    runs-on: ${{matrix.test.os}}
-    strategy:
-      matrix:
-        test:
-          - {os: "ubuntu-18.04", osname: "Ubuntu 18.04", PY: "3.6", TOXENV: "py36"}
-          - {os: "ubuntu-18.04", osname: "Ubuntu 18.04", PY: "3.7", TOXENV: "py37"}
-          - {os: "ubuntu-20.04", osname: "Ubuntu 20.04", PY: "3.8", TOXENV: "py38"}
-          - {os: "macos-10.15", osname: "MacOS 10.15", PY: "3.6", TOXENV: "py36"}
-          - {os: "macos-10.15", osname: "MacOS 10.15", PY: "3.8", TOXENV: "py38"}
-          - {os: "windows-2016", osname: "Windows 2016", PY: "3.6", TOXENV: "py36"}
-          - {os: "windows-2019", osname: "Windows 2019", PY: "3.8", TOXENV: "py38"}
-    steps:
-      - name: "Checkout"
-        uses: actions/checkout@v2
-
-      - name: "Setup Python ${{matrix.test.PY}}"
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{matrix.test.PY}}
-
-      - name: "Install tox"
-        run: python -m pip -q install tox
-
-      - name: "Test"
-        env:
-           TOXENV: ${{matrix.test.TOXENV}}
-        run: python -m tox -r -- --color=yes
-
   database:
-    if: false
-    name: "database test (disabled)"
-    #name: "PostgreSQL ${{matrix.test.PG}} + Python ${{matrix.test.PY}}"
+    name: "Python ${{matrix.test.PY}} + PostgreSQL ${{matrix.test.PG}}"
     runs-on: ubuntu-18.04
     strategy:
       matrix:
         test:
-          - {PY: "3.6", PG: "12", TOXENV: "py36"}
+          - {PY: "3.8", PG: "12", TOXENV: "py38"}
     steps:
       - name: "Checkout"
         uses: actions/checkout@v2
@@ -101,7 +69,7 @@ jobs:
           sudo -nH mkdir -p /etc/postgresql-common/createcluster.d
           echo "create_main_cluster = false" | sudo -nH tee /etc/postgresql-common/createcluster.d/no-main.conf
 
-          sudo -nH apt-get -qyu install postgresql-${{matrix.test.PG}}
+          sudo -nH apt-get -qyu install postgresql-${{matrix.test.PG}} pgqd postgresql-${{matrix.test.PG}}-pgq-node
           echo "::endgroup::"
 
           # tune environment
@@ -115,10 +83,19 @@ jobs:
           LANG=C initdb data
           sed -ri -e "s,^[# ]*(unix_socket_directories).*,\\1='/tmp'," data/postgresql.conf
           pg_ctl -D data -l log/pg.log start || { cat log/pg.log ; exit 1; }
+          sleep 1
+
+      - name: "CreateDB"
+        run: |
+          psql -d postgres -c "create database testdb"
+          psql -d testdb -c "create extension pgq; create extension pgq_node;"
+          psql -d testdb -c "select pgq.create_queue('testq')"
 
       - name: "Test"
         env:
-           TOXENV: ${{matrix.test.TOXENV}}
+          TOXENV: ${{matrix.test.TOXENV}}
+          TEST_Q_NAME: testq
+          PGDATABASE: testdb
         run: |
           python -m tox -r -- --color=yes
 
