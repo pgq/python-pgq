@@ -409,11 +409,11 @@ class CascadeAdmin(skytools.AdminScript):
 
         # fixme: dead node handling?
         nodelist = self.queue_info.member_map.keys()
-        for node in nodelist:
-            if node == self.local_node:
+        for xnode in nodelist:
+            if xnode == self.local_node:
                 continue
-            if self.find_consumer_check(node, consumer):
-                return (node, consumer)
+            if self.find_consumer_check(xnode, consumer):
+                return (xnode, consumer)
 
         raise Exception('Consumer not found')
 
@@ -707,6 +707,7 @@ class CascadeAdmin(skytools.AdminScript):
         res = self.node_cmd(oldnode, q, [self.queue_name, step, newnode])
         if res:
             return res[0]['last_tick']
+        return None
 
     def promote_branch(self, node):
         """Promote old branch as root."""

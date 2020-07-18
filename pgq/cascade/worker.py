@@ -122,16 +122,6 @@ class CascadedWorker(CascadedConsumer):
 
     real_global_wm = None
 
-    def __init__(self, service_name, db_name, args):
-        """Initialize new consumer.
-
-        @param service_name: service_name for DBScript
-        @param db_name: target database name for get_database()
-        @param args: cmdline args for DBScript
-        """
-
-        super(CascadedWorker, self).__init__(service_name, db_name, args)
-
     def reload(self):
         super(CascadedWorker, self).reload()
 

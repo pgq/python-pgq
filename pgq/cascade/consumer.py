@@ -189,7 +189,7 @@ class CascadedConsumer(BaseConsumer):
 
         if self._consumer_state['node_type'] == 'root':
             self.process_root_node(dst_db)
-            return
+            return None
 
         if not self.provider_connstr:
             raise Exception('provider_connstr not set')
