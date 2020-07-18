@@ -13,6 +13,9 @@ debian/files
 debian/python-*
 debian/python3-*
 
+cover
+dist
+
 .tox
 .coverage
 .pybuild
