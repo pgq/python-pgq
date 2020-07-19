@@ -12,10 +12,15 @@ with open("pgq/__init__.py") as f:
             _version = ln.split()[2].strip("\"'")
 len(_version)
 
+# load info
+with open("README.rst") as f:
+    ldesc = f.read().strip()
+    sdesc = ldesc.split('\n')[0]
 
 setup(
     name="pgq",
-    description="PgQ client library for Python",
+    description=sdesc,
+    long_description=ldesc,
     version=_version,
     license="ISC",
     url="https://github.com/pgq/python-pgq",

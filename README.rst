@@ -1,6 +1,5 @@
-
-pgq client
-==========
+PgQ client library for Python
+=============================
 
 pgq module
 ----------
