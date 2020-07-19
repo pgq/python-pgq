@@ -1,15 +1,16 @@
 PgQ client library for Python
 =============================
 
-pgq module
-----------
+Features
+--------
 
-Simple clients.
+Simple consumers on top of ``pgq``:
 
+* Event producing
+* Base classes for consumers
 
-pgq.cascade module
-------------------
+Cascaded consumers on top of ``pgq_node``:
 
-Client and admin tooling for cascaded consumers.
-
+* Worker base class
+* Admin tools
 
