@@ -35,9 +35,9 @@ jobs:
           test "${{github.ref}}" = "refs/tags/v${VERSION}" || { echo "ERR: tag mismatch"; exit 1; }
           python setup.py sdist
           test -f "dist/${TGZ}" || { echo "ERR: sdist failed"; exit 1; }
-          echo "::set-env name=PACKAGE::${PACKAGE}"
-          echo "::set-env name=VERSION::${VERSION}"
-          echo "::set-env name=TGZ::${TGZ}"
+          echo "PACKAGE=${PACKAGE}" >> $GITHUB_ENV
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "TGZ=${TGZ}" >> $GITHUB_ENV
           echo "::endgroup::"
 
       - name: Prepare release notes

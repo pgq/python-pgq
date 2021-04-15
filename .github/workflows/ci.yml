@@ -73,8 +73,8 @@ jobs:
           echo "::endgroup::"
 
           # tune environment
-          echo "::add-path::/usr/lib/postgresql/${{matrix.test.PG}}/bin"
-          echo "::set-env name=PGHOST::/tmp"
+          echo "/usr/lib/postgresql/${{matrix.test.PG}}/bin" >> $GITHUB_PATH
+          echo "PGHOST=/tmp" >> $GITHUB_ENV
 
       - name: "StartDB"
         run: |
