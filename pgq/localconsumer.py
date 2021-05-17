@@ -38,14 +38,14 @@ class LocalConsumer(BaseConsumer):
     """
 
     def reload(self):
-        super(LocalConsumer, self).reload()
+        super().reload()
 
         self.local_tracking_file = self.cf.getfile('local_tracking_file')
         if not os.path.exists(os.path.dirname(self.local_tracking_file)):
             raise skytools.UsageError("path does not exist: %s" % self.local_tracking_file)
 
     def init_optparse(self, parser=None):
-        p = super(LocalConsumer, self).init_optparse(parser)
+        p = super().init_optparse(parser)
         p.add_option("--rewind", action="store_true",
                      help="change queue position according to local tick")
         p.add_option("--reset", action="store_true",
@@ -59,7 +59,7 @@ class LocalConsumer(BaseConsumer):
         if self.options.reset:
             self.dst_reset()
             sys.exit(0)
-        super(LocalConsumer, self).startup()
+        super().startup()
 
         self.check_queue()
 
@@ -104,7 +104,7 @@ class LocalConsumer(BaseConsumer):
     def work(self):
         if self.work_state < 0:
             self.check_queue()
-        return super(LocalConsumer, self).work()
+        return super().work()
 
     def process_batch(self, db, batch_id, event_list):
         """Process all events in batch.
@@ -161,14 +161,14 @@ class LocalConsumer(BaseConsumer):
         self.save_local_tick(tick_id)
 
     def register_consumer(self):
-        new = super(LocalConsumer, self).register_consumer()
+        new = super().register_consumer()
         if new:  # fixme
             self.dst_reset()
 
     def unregister_consumer(self):
         """If unregistering, also clean completed tick table on dest."""
 
-        super(LocalConsumer, self).unregister_consumer()
+        super().unregister_consumer()
         self.dst_reset()
 
     def rewind(self):

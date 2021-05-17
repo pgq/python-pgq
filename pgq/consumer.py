@@ -21,7 +21,7 @@ class RetriableEvent(Event):
     __slots__ = ('_status', )
 
     def __init__(self, queue_name, row):
-        super(RetriableEvent, self).__init__(queue_name, row)
+        super().__init__(queue_name, row)
         self._status = EV_DONE
 
     def tag_done(self):
@@ -44,7 +44,7 @@ class RetriableWalkerEvent(RetriableEvent):
     __slots__ = ('_walker', )
 
     def __init__(self, walker, queue_name, row):
-        super(RetriableWalkerEvent, self).__init__(queue_name, row)
+        super().__init__(queue_name, row)
         self._walker = walker
 
     def tag_done(self):
@@ -62,7 +62,7 @@ class RetriableBatchWalker(BaseBatchWalker):
     """
 
     def __init__(self, curs, batch_id, queue_name, fetch_size=300, consumer_filter=None):
-        super(RetriableBatchWalker, self).__init__(curs, batch_id, queue_name, fetch_size, consumer_filter)
+        super().__init__(curs, batch_id, queue_name, fetch_size, consumer_filter)
         self.status_map = {}
 
     def _make_event(self, queue_name, row):
@@ -122,7 +122,7 @@ class Consumer(BaseConsumer):
 
         self._flush_retry(curs, batch_id, ev_list)
 
-        super(Consumer, self)._finish_batch(curs, batch_id, ev_list)
+        super()._finish_batch(curs, batch_id, ev_list)
 
     def _tag_retry(self, cx, batch_id, ev_id, retry_time):
         """Tag event for retry. (internal)"""

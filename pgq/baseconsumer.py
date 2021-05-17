@@ -151,7 +151,7 @@ class BaseConsumer(skytools.DBScript):
         @param args: cmdline args for DBScript
         """
 
-        super(BaseConsumer, self).__init__(service_name, args)
+        super().__init__(service_name, args)
 
         self.db_name = db_name
 
@@ -210,7 +210,7 @@ class BaseConsumer(skytools.DBScript):
         return skytools.DBScript.startup(self)
 
     def init_optparse(self, parser=None):
-        p = super(BaseConsumer, self).init_optparse(parser)
+        p = super().init_optparse(parser)
         p.add_option('--register', action='store_true',
                      help='register consumer on queue')
         p.add_option('--unregister', action='store_true',

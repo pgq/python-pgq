@@ -123,7 +123,7 @@ class CascadedWorker(CascadedConsumer):
     real_global_wm = None
 
     def reload(self):
-        super(CascadedWorker, self).reload()
+        super().reload()
 
         self.global_wm_publish_period = self.cf.getfloat('global_wm_publish_period',
                                                          CascadedWorker.global_wm_publish_period)
@@ -178,7 +178,7 @@ class CascadedWorker(CascadedConsumer):
             return False
 
         # check if events have processed
-        done = super(CascadedWorker, self).is_batch_done(state, batch_info, dst_db)
+        done = super().is_batch_done(state, batch_info, dst_db)
         if not wst.create_tick:
             return done
         if not done:
@@ -294,7 +294,7 @@ class CascadedWorker(CascadedConsumer):
 
         # non cascade events send to CascadedConsumer to error out
         if ev.ev_type[:4] != 'pgq.':
-            super(CascadedWorker, self).process_remote_event(src_curs, dst_curs, ev)
+            super().process_remote_event(src_curs, dst_curs, ev)
             return
 
         # ignore cascade events if not main worker
@@ -362,7 +362,7 @@ class CascadedWorker(CascadedConsumer):
                 q = "select pgq.insert_event(%s, 'pgq.tick-id', %s, %s, null, null, null)"
                 dst_curs.execute(q, [st.target_queue, str(tick_id), self.pgq_queue_name])
 
-        super(CascadedWorker, self).finish_remote_batch(src_db, dst_db, tick_id)
+        super().finish_remote_batch(src_db, dst_db, tick_id)
 
         if self.main_worker:
             if st.create_tick:
@@ -418,7 +418,7 @@ class CascadedWorker(CascadedConsumer):
     def refresh_state(self, dst_db, full_logic=True):
         """Load also node state from target node.
         """
-        res = super(CascadedWorker, self).refresh_state(dst_db, full_logic)
+        res = super().refresh_state(dst_db, full_logic)
         q = "select * from pgq_node.get_node_info(%s)"
         st = self.exec_cmd(dst_db, q, [self.pgq_queue_name])
         self._worker_state = WorkerState(self.pgq_queue_name, st[0])
@@ -428,7 +428,7 @@ class CascadedWorker(CascadedConsumer):
         """On root node send global watermark downstream.
         """
 
-        super(CascadedWorker, self).process_root_node(dst_db)
+        super().process_root_node(dst_db)
 
         t = time.time()
         if t - self.global_wm_publish_time < self.global_wm_publish_period:

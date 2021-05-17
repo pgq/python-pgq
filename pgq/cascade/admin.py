@@ -84,7 +84,7 @@ class CascadeAdmin(skytools.AdminScript):
     commands_without_pidfile = ['status', 'node-status', 'node-info']
 
     def __init__(self, svc_name, dbname, args, worker_setup=False):
-        super(CascadeAdmin, self).__init__(svc_name, args)
+        super().__init__(svc_name, args)
         self.initial_db_name = dbname
         if worker_setup:
             self.options.worker = self.job_name
@@ -92,7 +92,7 @@ class CascadeAdmin(skytools.AdminScript):
 
     def init_optparse(self, parser=None):
         """Add SetAdmin switches to parser."""
-        p = super(CascadeAdmin, self).init_optparse(parser)
+        p = super().init_optparse(parser)
 
         usage = command_usage + standalone_usage
         p.set_usage(usage.strip())

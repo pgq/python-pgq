@@ -29,7 +29,7 @@ class CascadedConsumer(BaseConsumer):
         @param args: cmdline args for DBScript
         """
 
-        super(CascadedConsumer, self).__init__(service_name, PDB, args)
+        super().__init__(service_name, PDB, args)
 
         self.log.debug("__init__")
 
@@ -37,7 +37,7 @@ class CascadedConsumer(BaseConsumer):
         self.provider_connstr = None
 
     def init_optparse(self, parser=None):
-        p = super(CascadedConsumer, self).init_optparse(parser)
+        p = super().init_optparse(parser)
         p.add_option("--provider", help="provider location for --register")
         p.add_option("--rewind", action="store_true",
                      help="change queue position according to destination")
@@ -52,7 +52,7 @@ class CascadedConsumer(BaseConsumer):
         if self.options.reset:
             self.dst_reset()
             sys.exit(0)
-        return super(CascadedConsumer, self).startup()
+        return super().startup()
 
     def register_consumer(self, provider_loc=None):
         """Register consumer on source node first, then target node."""
@@ -76,7 +76,7 @@ class CascadedConsumer(BaseConsumer):
             raise Exception('parent node not initialized?')
 
         # source queue
-        super(CascadedConsumer, self).register_consumer()
+        super().register_consumer()
 
         # fetch pos
         q = "select last_tick from pgq.get_consumer_info(%s, %s)"
@@ -107,7 +107,7 @@ class CascadedConsumer(BaseConsumer):
         self.get_provider_db(state)
 
         # unregister on provider
-        super(CascadedConsumer, self).unregister_consumer()
+        super().unregister_consumer()
 
         # unregister on subscriber
         q = "select * from pgq_node.unregister_consumer(%s, %s)"
@@ -195,7 +195,7 @@ class CascadedConsumer(BaseConsumer):
             raise Exception('provider_connstr not set')
         self.get_provider_db(self._consumer_state)
 
-        return super(CascadedConsumer, self).work()
+        return super().work()
 
     def refresh_state(self, dst_db, full_logic=True):
         """Fetch consumer state from target node.
@@ -289,5 +289,5 @@ class CascadedConsumer(BaseConsumer):
         except BaseException:
             self.log.warning("Failure to call pgq_node.set_consumer_error()")
         self.reset()
-        super(CascadedConsumer, self).exception_hook(det, emsg)
+        super().exception_hook(det, emsg)
 
