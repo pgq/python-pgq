@@ -20,8 +20,8 @@ except ImportError:
     import Queue    # noqa
 
 import skytools
-from pgq.cascade.nodeinfo import NodeInfo, QueueInfo
 from skytools import DBError, UsageError
+from pgq.cascade.nodeinfo import NodeInfo, QueueInfo
 
 __all__ = ['CascadeAdmin']
 
@@ -1326,7 +1326,7 @@ class CascadeAdmin(skytools.AdminScript):
 
     def resurrect_dump_event(self, ev, stats, batch_info):
         if self._json_dump_file is None:
-            self._json_dump_file = open(RESURRECT_DUMP_FILE, 'w')
+            self._json_dump_file = open(RESURRECT_DUMP_FILE, 'w')   # pylint: disable=consider-using-with
             sep = '['
         else:
             sep = ','

@@ -195,9 +195,8 @@ class LocalConsumer(BaseConsumer):
     def load_local_tick(self):
         """Reads stored tick or -1."""
         try:
-            f = open(self.local_tracking_file, 'r')
-            buf = f.read()
-            f.close()
+            with open(self.local_tracking_file, 'r') as f:
+                buf = f.read()
             data = buf.strip()
             if data:
                 tick_id = int(data)
