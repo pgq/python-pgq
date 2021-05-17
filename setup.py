@@ -27,6 +27,7 @@ setup(
     maintainer="Marko Kreen",
     maintainer_email="markokr@gmail.com",
     packages=["pgq", "pgq.cascade"],
+    package_data={"pgq": ["py.typed"]},
     install_requires=["skytools"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",

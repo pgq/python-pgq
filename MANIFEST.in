@@ -2,3 +2,4 @@ include tests/*.py tests/*.ini
 include tox.ini .pylintrc .coveragerc
 include MANIFEST.in
 include README.rst NEWS.md
+include pgq/py.typed
