@@ -6,6 +6,8 @@ CascadedConsumer that also maintains node.
 import sys
 import time
 
+from typing import Sequence, List
+
 import skytools
 from pgq.cascade.consumer import CascadedConsumer
 from pgq.event import Event
@@ -36,7 +38,7 @@ class WorkerState(object):
     process_global_wm = 0   # ok
 
     sync_watermark = 0      # ?
-    wm_sync_nodes = []
+    wm_sync_nodes: Sequence[str] = []
 
     def __init__(self, queue_name, nst):
         self.node_type = nst['node_type']
@@ -118,7 +120,7 @@ class CascadedWorker(CascadedConsumer):
     main_worker = True
 
     _worker_state = None
-    ev_buf = []
+    ev_buf: List[Event] = []
 
     real_global_wm = None
 

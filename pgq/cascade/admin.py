@@ -10,14 +10,12 @@ setadm.py INI pause NODE [CONS]
 
 import optparse
 import os.path
+import queue
 import sys
 import threading
 import time
 
-try:
-    import queue as Queue
-except ImportError:
-    import Queue    # noqa
+from typing import Dict, List
 
 import skytools
 from skytools import DBError, UsageError
@@ -77,7 +75,7 @@ class CascadeAdmin(skytools.AdminScript):
     """Cascaded PgQ administration."""
     queue_name = None
     queue_info = None
-    extra_objs = []
+    extra_objs: List[skytools.DBObject] = []
     local_node = None
     root_node_name = None
 
@@ -440,11 +438,11 @@ class CascadeAdmin(skytools.AdminScript):
         self.load_local_info()
 
         # prepare data for workers
-        members = Queue.Queue()
+        members = queue.Queue()
         for m in self.queue_info.member_map.values():
             cstr = self.add_connect_string_profile(m.location, 'remote')
             members.put((m.name, cstr))
-        nodes = Queue.Queue()
+        nodes = queue.Queue()
 
         # launch workers and wait
         num_nodes = len(self.queue_info.member_map)
@@ -462,7 +460,7 @@ class CascadeAdmin(skytools.AdminScript):
         while True:
             try:
                 node = nodes.get_nowait()
-            except Queue.Empty:
+            except queue.Empty:
                 break
             self.queue_info.add_node(node)
 
@@ -473,7 +471,7 @@ class CascadeAdmin(skytools.AdminScript):
         while True:
             try:
                 node_name, node_connstr = members.get_nowait()
-            except Queue.Empty:
+            except queue.Empty:
                 break
             node = self.load_node_status(node_name, node_connstr)
             nodes.put(node)
@@ -1465,7 +1463,7 @@ class CascadeAdmin(skytools.AdminScript):
         q = "select * from pgq_node.unsubscribe_node(%s, %s)"
         self.node_cmd(target_node, q, [self.queue_name, subscriber_node])
 
-    _node_cache = {}
+    _node_cache: Dict[str, NodeInfo] = {}
 
     def get_node_info(self, node_name):
         """Cached node info lookup."""

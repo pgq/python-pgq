@@ -4,6 +4,8 @@
 import datetime
 import re
 
+from typing import Dict
+
 import skytools
 
 __all__ = ['MemberInfo', 'NodeInfo', 'QueueInfo']
@@ -53,7 +55,7 @@ class NodeInfo(object):
     combined_queue = None
     combined_type = None
     last_tick = None
-    node_attrs = {}
+    node_attrs: Dict[str, str] = {}
     service = None
 
     def __init__(self, queue_name, row, main_worker=True, node_name=None, location=None):
