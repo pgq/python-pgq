@@ -7,9 +7,6 @@ clean:
 	rm -rf debian/*.substvars debian/*.debhelper debian/*-stamp
 	rm -rf .pybuild MANIFEST
 
-deb:
-	debuild -us -uc -b
-
 xclean: clean
 	rm -rf .tox dist
 
