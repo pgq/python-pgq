@@ -42,6 +42,7 @@ jobs:
           python setup.py sdist
           test -f "dist/${TGZ}" || { echo "ERR: sdist failed"; exit 1; }
           python -m pip wheel --disable-pip-version-check -w dist dist/${TGZ}
+          rm -f dist/skytools*
           echo "PACKAGE=${PACKAGE}" >> $GITHUB_ENV
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
           echo "TGZ=${TGZ}" >> $GITHUB_ENV
