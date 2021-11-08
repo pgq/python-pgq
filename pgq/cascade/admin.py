@@ -122,6 +122,8 @@ class CascadeAdmin(skytools.AdminScript):
                      help="list of node names to sync with")
         g.add_option("--nocheck", action="store_true",
                      help="create: do not check public connect string")
+        g.add_option("--compact", action="store_true",
+                     help="status: print tree in compact format")
         p.add_option_group(g)
         return p
 
@@ -464,7 +466,10 @@ class CascadeAdmin(skytools.AdminScript):
                 break
             self.queue_info.add_node(node)
 
-        self.queue_info.print_tree()
+        if self.options.compact:
+            self.queue_info.print_tree_compact()
+        else:
+            self.queue_info.print_tree()
 
     def _cmd_status_worker(self, members, nodes):
         # members in, nodes out, both thread-safe
