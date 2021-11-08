@@ -309,5 +309,5 @@ def _setpfx(pfx, sfx):
 
 
 def _node_key(n):
-    return (n.levels, n.total_childs, n.name)
+    return (n.levels, n.total_childs, n.service or '', n.name)
 
