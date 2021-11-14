@@ -734,6 +734,55 @@ class CascadeAdmin(skytools.AdminScript):
             if info.completed_tick >= last_tick:
                 return info
 
+    def pause_and_wait_merge_workers(self, old_info, new_info):
+        if not old_info.target_for or not new_info.target_for:
+            if not old_info.target_for and not new_info.target_for:
+                return
+            raise Exception('Inconsistent targets: old-node=%r new-node=%r' % (
+                old_info.target_for, new_info.target_for))
+
+        old_target_for = sorted(old_info.target_for)
+        new_target_for = sorted(new_info.target_for)
+        if old_target_for != new_target_for:
+            raise Exception('Inconsistent targets: old-node=%r new-node=%r' % (
+                old_target_for, new_target_for))
+
+        self.log.info('%s: pausing merge workers', old_info.name)
+        old_merges = self.load_merge_queues(old_info.name, old_target_for)
+        for other_queue_name, other_info in old_merges.items():
+            self.set_paused(old_info.name, other_info.worker_name, True, queue_name=other_queue_name)
+
+        # load final state
+        old_merges = self.load_merge_queues(old_info.name, old_target_for)
+
+        self.log.info('%s: waiting for merge position to catch up', new_info.name)
+        while True:
+            time.sleep(2)
+            in_sync = True
+            new_merges = self.load_merge_queues(new_info.name, new_target_for)
+            for source_queue, old_merge_info in old_merges.items():
+                new_merge_info = new_merges[source_queue]
+                if new_merge_info.last_tick != old_merge_info.last_tick:
+                    in_sync = False
+            if in_sync:
+                break
+
+    def resume_merge_workers(self, old_node_name):
+        old_info = self.get_node_info(old_node_name)
+        if not old_info.target_for:
+            return
+        old_target_for = sorted(old_info.target_for)
+        old_merges = self.load_merge_queues(old_info.name, old_target_for)
+        for other_queue_name, other_info in old_merges.items():
+            self.set_paused(old_info.name, other_info.worker_name, False, queue_name=other_queue_name)
+        self.log.info('%s: merge workers resumed', old_info.name)
+
+    def load_merge_queues(self, node_name, queue_list):
+        res = {}
+        for queue_name in queue_list:
+            res[queue_name] = self.load_other_node_info(node_name, queue_name)
+        return res
+
     def takeover_root(self, old_node_name, new_node_name, failover=False):
         """Root switchover."""
 
@@ -743,6 +792,9 @@ class CascadeAdmin(skytools.AdminScript):
         if self.node_alive(old_node_name):
             # old root works, switch properly
             old_info = self.get_node_info(old_node_name)
+
+            self.pause_and_wait_merge_workers(old_info, new_info)
+
             self.pause_node(old_node_name)
             self.demote_node(old_node_name, 1, new_node_name)
             last_tick = self.demote_node(old_node_name, 2, new_node_name)
@@ -798,6 +850,8 @@ class CascadeAdmin(skytools.AdminScript):
         if self.node_alive(old_node_name):
             self.demote_node(old_node_name, 3, new_node_name)
             self.resume_node(old_node_name)
+
+            self.resume_merge_workers(old_node_name)
 
     def takeover_nonroot(self, old_node_name, new_node_name, failover):
         """Non-root switchover."""
@@ -1419,16 +1473,18 @@ class CascadeAdmin(skytools.AdminScript):
     # Various operation on nodes.
     #
 
-    def set_paused(self, node, consumer, pause_flag):
+    def set_paused(self, node, consumer, pause_flag, queue_name=None):
         """Set node pause flag and wait for confirmation."""
+        if not queue_name:
+            queue_name = self.queue_name
 
         q = "select * from pgq_node.set_consumer_paused(%s, %s, %s)"
-        self.node_cmd(node, q, [self.queue_name, consumer, pause_flag])
+        self.node_cmd(node, q, [queue_name, consumer, pause_flag])
 
         self.log.info('Waiting for worker to accept')
         while True:
             q = "select * from pgq_node.get_consumer_state(%s, %s)"
-            stat = self.node_cmd(node, q, [self.queue_name, consumer], quiet=True)[0]
+            stat = self.node_cmd(node, q, [queue_name, consumer], quiet=True)[0]
             if stat['paused'] != pause_flag:
                 raise Exception('operation canceled? %s <> %s' % (repr(stat['paused']), repr(pause_flag)))
 
@@ -1488,6 +1544,20 @@ class CascadeAdmin(skytools.AdminScript):
         rows = self.exec_query(db, q, [self.queue_name])
         m = self.queue_info.get_member(node_name)
         return NodeInfo(self.queue_name, rows[0], location=m.location)
+
+    def load_other_node_info(self, our_node_name, other_queue_name):
+        """Load node info from other queue.
+
+        our_node_name - node name in local queue
+        other_queue_name - queue name located in database of our_node_name
+        """
+        db = self.get_node_database(our_node_name)
+        if not db:
+            self.log.warning('load_node_info(%s): ignoring dead node', our_node_name)
+            return None
+        q = "select * from pgq_node.get_node_info(%s)"
+        rows = self.exec_query(db, q, [other_queue_name])
+        return NodeInfo(other_queue_name, rows[0], location=None)
 
     def load_queue_info(self, db):
         """Non-cached set info lookup."""

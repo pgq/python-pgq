@@ -55,6 +55,7 @@ class NodeInfo(object):
     uptodate = True
     combined_queue = None
     combined_type = None
+    target_for = None
     last_tick = None
     node_attrs: Dict[str, str] = {}
     service = None
@@ -95,6 +96,14 @@ class NodeInfo(object):
         self.combined_queue = row['combined_queue']
         self.combined_type = row['combined_type']
         self.last_tick = row['worker_last_tick']
+        try:
+            target_for = row['target_for']
+            if isinstance(target_for, str):
+                self.target_for = skytools.parse_pgarray(target_for)
+            else:
+                self.target_for = target_for
+        except KeyError:
+            pass
 
         self.node_attrs = {}
         if 'node_attrs' in row:
