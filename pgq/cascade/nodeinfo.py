@@ -250,6 +250,23 @@ class QueueInfo(object):
             for ln in datalines:
                 print(self._DATAFMT % (' ', ln))
 
+    def print_tree_compact(self):
+        """Print ascii-tree for set in compact format.
+        Expects that data for all nodes is filled in."""
+
+        print('Queue: %s   Local node: %s' % (self.queue_name, self.local_node.name))
+        print('')
+
+        root_list = self._prepare_tree()
+        for root in root_list:
+            self._tree_calc(root)
+            self._print_node_compact(root, '')
+
+    def _print_node_compact(self, node, pfx):
+        print(pfx + node.get_title().ljust(60-len(pfx)) + ''.join(ln.ljust(30) for ln in node.get_infolines()))
+        for n in node.child_list:
+            self._print_node_compact(n, pfx + '   ')
+
     def _print_node(self, node, pfx, datalines):
         # print a tree fragment for node and info
         # returns list of unprinted data rows
