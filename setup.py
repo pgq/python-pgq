@@ -10,7 +10,7 @@ with open("pgq/__init__.py") as f:
     for ln in f:
         if ln.startswith("__version__"):
             _version = ln.split()[2].strip("\"'")
-len(_version)
+assert _version
 
 # load info
 with open("README.rst") as f:
