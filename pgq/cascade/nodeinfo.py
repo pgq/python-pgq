@@ -3,6 +3,7 @@
 
 import datetime
 import re
+import sys
 
 from typing import Dict
 
@@ -140,7 +141,19 @@ class NodeInfo(object):
         elif self.queue_info:
             lag = self.queue_info['ticker_lag']
 
-        txt = "Lag: %s" % (lag and ival2str(lag) or "(n/a)")
+        c1 = ""
+        c2 = ""
+        use_colors = sys.stdout.isatty()
+        if use_colors:
+            if sys.platform.startswith('win'):
+                use_colors = False
+
+        if use_colors:
+            if lag and lag > datetime.timedelta(minutes=1):
+                c1 = "\033[31m"  # red
+                c2 = "\033[0m"
+
+        txt = "Lag: %s%s%s" % (c1, lag and ival2str(lag) or "(n/a)", c2)
         if self.last_tick:
             txt += ", Tick: %s" % self.last_tick
         if self.paused:
