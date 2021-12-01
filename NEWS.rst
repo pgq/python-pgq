@@ -1,6 +1,14 @@
 NEWS
 ====
 
+pgq 3.6
+-------
+
+Features:
+
+* takeover: handle merge workers on takeover
+* takeover: move switch of other subscriber before takeover
+
 pgq 3.5.2
 ---------
 
