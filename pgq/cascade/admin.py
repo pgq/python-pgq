@@ -900,16 +900,17 @@ class CascadeAdmin(skytools.AdminScript):
             self.log.info("same node?")
             return
 
-        if otype == 'root':
-            self.takeover_root(old_node_name, new_node_name, failover)
-        else:
-            self.takeover_nonroot(old_node_name, new_node_name, failover)
-
         # switch subscribers around
         if self.options.all or failover:
             for n in self.find_subscribers_for(old_node_name):
                 if n != new_node_name:
                     self.node_change_provider(n, new_node_name)
+
+        # actual switch
+        if otype == 'root':
+            self.takeover_root(old_node_name, new_node_name, failover)
+        else:
+            self.takeover_nonroot(old_node_name, new_node_name, failover)
 
     def find_provider(self, node_name):
         if self.node_alive(node_name):
