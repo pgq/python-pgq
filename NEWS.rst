@@ -1,6 +1,13 @@
 NEWS
 ====
 
+pgq 3.6.1
+---------
+
+Fixes:
+
+* status: handle root with random provider
+
 pgq 3.6
 -------
 
