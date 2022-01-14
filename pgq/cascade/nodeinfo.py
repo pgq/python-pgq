@@ -315,7 +315,8 @@ class QueueInfo(object):
 
         root_list = []
         for node in self.node_map.values():
-            if node.provider_node \
+            if node.type != 'root' \
+                    and node.provider_node \
                     and node.provider_node != node.name \
                     and node.provider_node in self.node_map:
                 p = self.node_map[node.provider_node]
