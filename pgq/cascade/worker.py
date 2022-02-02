@@ -162,7 +162,7 @@ class CascadedWorker(CascadedConsumer):
         to appear from combined-root.
         """
         dst_db.commit()
-        while True:
+        while self._worker_state.wait_behind:
             cst = self._consumer_state
             if cst['completed_tick'] >= tick_id:
                 return
