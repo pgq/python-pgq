@@ -1,6 +1,13 @@
 NEWS
 ====
 
+pgq 3.6.2
+---------
+
+Fixes:
+
+* worker: detect if wait-behind is finished
+
 pgq 3.6.1
 ---------
 
