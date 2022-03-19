@@ -6,13 +6,18 @@ To be subclassed, then override .process_local_batch() or .process_local_event()
 methods.
 """
 
+from typing import Optional
+
 import errno
 import os
 import sys
+import optparse
 
 import skytools
+from skytools.basetypes import Connection
 
-from pgq.baseconsumer import BaseConsumer
+from pgq.event import Event
+from pgq.baseconsumer import BaseConsumer, EventList
 
 __all__ = ['LocalConsumer']
 
@@ -37,14 +42,14 @@ class LocalConsumer(BaseConsumer):
         local_tracking_file = ~/state/%(job_name)s.tick
     """
 
-    def reload(self):
+    def reload(self) -> None:
         super().reload()
 
         self.local_tracking_file = self.cf.getfile('local_tracking_file')
         if not os.path.exists(os.path.dirname(self.local_tracking_file)):
             raise skytools.UsageError("path does not exist: %s" % self.local_tracking_file)
 
-    def init_optparse(self, parser=None):
+    def init_optparse(self, parser: Optional[optparse.OptionParser] = None) -> optparse.OptionParser:
         p = super().init_optparse(parser)
         p.add_option("--rewind", action="store_true",
                      help="change queue position according to local tick")
@@ -52,7 +57,7 @@ class LocalConsumer(BaseConsumer):
                      help="reset local tick based on queue position")
         return p
 
-    def startup(self):
+    def startup(self) -> None:
         if self.options.rewind:
             self.rewind()
             sys.exit(0)
@@ -63,7 +68,7 @@ class LocalConsumer(BaseConsumer):
 
         self.check_queue()
 
-    def check_queue(self):
+    def check_queue(self) -> None:
         queue_tick = -1
         local_tick = self.load_local_tick()
 
@@ -101,12 +106,12 @@ class LocalConsumer(BaseConsumer):
         else:
             self.log.info("Ticks match: Queue=%d Local=%d", queue_tick, local_tick)
 
-    def work(self):
+    def work(self) -> int:
         if self.work_state < 0:
             self.check_queue()
         return super().work()
 
-    def process_batch(self, db, batch_id, event_list):
+    def process_batch(self, db: Connection, batch_id: int, event_list: EventList) -> None:
         """Process all events in batch.
         """
 
@@ -120,20 +125,21 @@ class LocalConsumer(BaseConsumer):
         # finish work
         self.set_batch_done()
 
-    def process_local_batch(self, db, batch_id, event_list):
+    def process_local_batch(self, db: Connection, batch_id: int, event_list: EventList) -> None:
         """Overridable method to process whole batch."""
         for ev in event_list:
             self.process_local_event(db, batch_id, ev)
 
-    def process_local_event(self, db, batch_id, ev):
+    def process_local_event(self, db: Connection, batch_id: int, ev: Event) -> None:
         """Overridable method to process one event at a time."""
         raise Exception('process_local_event not implemented')
 
-    def is_batch_done(self):
+    def is_batch_done(self) -> bool:
         """Helper function to keep track of last successful batch in external database.
         """
 
         local_tick = self.load_local_tick()
+        assert self.batch_info
 
         cur_tick = self.batch_info['tick_id']
         prev_tick = self.batch_info['prev_tick_id']
@@ -154,24 +160,26 @@ class LocalConsumer(BaseConsumer):
         raise Exception('Lost position: batch %d..%d, dst has %d' % (
                         prev_tick, cur_tick, local_tick))
 
-    def set_batch_done(self):
+    def set_batch_done(self) -> None:
         """Helper function to set last successful batch in external database.
         """
-        tick_id = self.batch_info['tick_id']
-        self.save_local_tick(tick_id)
+        if self.batch_info:
+            tick_id = self.batch_info['tick_id']
+            self.save_local_tick(tick_id)
 
-    def register_consumer(self):
+    def register_consumer(self) -> int:
         new = super().register_consumer()
         if new:  # fixme
             self.dst_reset()
+        return new
 
-    def unregister_consumer(self):
+    def unregister_consumer(self) -> None:
         """If unregistering, also clean completed tick table on dest."""
 
         super().unregister_consumer()
         self.dst_reset()
 
-    def rewind(self):
+    def rewind(self) -> None:
         dst_tick = self.load_local_tick()
         if dst_tick >= 0:
             src_db = self.get_database(self.db_name)
@@ -185,17 +193,17 @@ class LocalConsumer(BaseConsumer):
         else:
             self.log.error('Cannot rewind, no tick found in local file')
 
-    def dst_reset(self):
+    def dst_reset(self) -> None:
         self.log.info("Removing local tracking file")
         try:
             os.remove(self.local_tracking_file)
         except BaseException:
             pass
 
-    def load_local_tick(self):
+    def load_local_tick(self) -> int:
         """Reads stored tick or -1."""
         try:
-            with open(self.local_tracking_file, 'r') as f:
+            with open(self.local_tracking_file, "r", encoding="utf8") as f:
                 buf = f.read()
             data = buf.strip()
             if data:
@@ -208,7 +216,7 @@ class LocalConsumer(BaseConsumer):
                 return -1
             raise
 
-    def save_local_tick(self, tick_id):
+    def save_local_tick(self, tick_id: int) -> None:
         """Store tick in local file."""
         data = str(tick_id)
         skytools.write_atomic(self.local_tracking_file, data)

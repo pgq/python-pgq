@@ -1,14 +1,17 @@
 """Status display.
 """
 
+from typing import Optional, Sequence, List
+
 import sys
 
+from skytools.basetypes import DictRow
 import skytools
 
 __all__ = ['PGQStatus']
 
 
-def ival(data, _as=None):
+def ival(data: str, _as: Optional[str] = None) -> str:
     "Format interval for output"
     if not _as:
         _as = data.split('.')[-1]
@@ -19,14 +22,14 @@ def ival(data, _as=None):
 
 class PGQStatus(skytools.DBScript):
     """Info gathering and display."""
-    def __init__(self, args, check=0):
+    def __init__(self, args: Sequence[str], check: int = 0) -> None:
         super().__init__('pgqadm', args)
 
         self.show_status()
 
         sys.exit(0)
 
-    def show_status(self):
+    def show_status(self) -> None:
         db = self.get_database("db", autocommit=1)
         cx = db.cursor()
 
@@ -83,18 +86,18 @@ class PGQStatus(skytools.DBScript):
         print('-' * 78)
         db.commit()
 
-    def show_consumer(self, cons):
+    def show_consumer(self, cons: DictRow) -> None:
         print("  %-46s %9s %9s %8d" % (
             cons['consumer_name'],
             cons['lag'], cons['last_seen'],
             cons['pending_events']))
 
-    def show_queue(self, ev_row, consumer_rows):
-        print("%(queue_name)s:" % ev_row)
+    def show_queue(self, ev_row: DictRow, consumer_rows: Sequence[DictRow]) -> None:
+        print("%s:" % ev_row['queue_name'])
         for cons in consumer_rows:
             self.show_consumer(cons)
 
-    def pick_consumers(self, ev_row, consumer_rows):
+    def pick_consumers(self, ev_row: DictRow, consumer_rows: Sequence[DictRow]) -> List[DictRow]:
         res = []
         for con in consumer_rows:
             if con['queue_name'] != ev_row['queue_name']:

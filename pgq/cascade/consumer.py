@@ -3,10 +3,15 @@
 Does not maintain node, but is able to pause, resume and switch provider.
 """
 
+from typing import Optional, Any, Sequence
+
 import sys
 import time
+import optparse
 
-from pgq.baseconsumer import BaseConsumer
+from skytools.basetypes import Cursor, Connection, DictRow
+from pgq.baseconsumer import BaseConsumer, EventList, BatchInfo
+from pgq.event import Event
 
 PDB = '_provider_db'
 
@@ -19,9 +24,11 @@ class CascadedConsumer(BaseConsumer):
     Loads provider from target node, accepts pause/resume commands.
     """
 
-    _consumer_state = None
+    _consumer_state: Optional[DictRow]
+    target_db: str
+    provider_connstr: Optional[str]
 
-    def __init__(self, service_name, db_name, args):
+    def __init__(self, service_name: str, db_name: str, args: Sequence[str]) -> None:
         """Initialize new consumer.
 
         @param service_name: service_name for DBScript
@@ -35,8 +42,9 @@ class CascadedConsumer(BaseConsumer):
 
         self.target_db = db_name
         self.provider_connstr = None
+        self._consumer_state = None
 
-    def init_optparse(self, parser=None):
+    def init_optparse(self, parser: Optional[optparse.OptionParser] = None) -> optparse.OptionParser:
         p = super().init_optparse(parser)
         p.add_option("--provider", help="provider location for --register")
         p.add_option("--rewind", action="store_true",
@@ -45,7 +53,7 @@ class CascadedConsumer(BaseConsumer):
                      help="reset queue position on destination side")
         return p
 
-    def startup(self):
+    def startup(self) -> None:
         if self.options.rewind:
             self.rewind()
             sys.exit(0)
@@ -54,7 +62,7 @@ class CascadedConsumer(BaseConsumer):
             sys.exit(0)
         return super().startup()
 
-    def register_consumer(self, provider_loc=None):
+    def register_consumer(self, provider_loc: Optional[str] = None) -> int:
         """Register consumer on source node first, then target node."""
 
         if not provider_loc:
@@ -90,18 +98,20 @@ class CascadedConsumer(BaseConsumer):
         q = "select * from pgq_node.register_consumer(%s, %s, %s, %s)"
         self.exec_cmd(dst_db, q, [self.queue_name, self.consumer_name, pnode, last_tick])
 
-    def get_consumer_state(self):
+        return 1
+
+    def get_consumer_state(self) -> DictRow:
         dst_db = self.get_database(self.target_db)
         q = "select * from pgq_node.get_consumer_state(%s, %s)"
         rows = self.exec_cmd(dst_db, q, [self.queue_name, self.consumer_name])
         state = rows[0]
         return state
 
-    def get_provider_db(self, state):
+    def get_provider_db(self, state: DictRow) -> Connection:
         provider_loc = state['provider_location']
         return self.get_database(PDB, connstr=provider_loc, profile='remote')
 
-    def unregister_consumer(self):
+    def unregister_consumer(self) -> None:
         dst_db = self.get_database(self.target_db)
         state = self.get_consumer_state()
         self.get_provider_db(state)
@@ -113,7 +123,7 @@ class CascadedConsumer(BaseConsumer):
         q = "select * from pgq_node.unregister_consumer(%s, %s)"
         self.exec_cmd(dst_db, q, [self.queue_name, self.consumer_name])
 
-    def rewind(self):
+    def rewind(self) -> None:
         self.log.info("Rewinding queue")
         dst_db = self.get_database(self.target_db)
 
@@ -131,7 +141,7 @@ class CascadedConsumer(BaseConsumer):
         dst_db.commit()
         src_db.commit()
 
-    def dst_reset(self):
+    def dst_reset(self) -> None:
         self.log.info("Resetting queue tracking on dst side")
 
         dst_db = self.get_database(self.target_db)
@@ -159,21 +169,23 @@ class CascadedConsumer(BaseConsumer):
         dst_curs.execute(q, [self.queue_name, self.consumer_name, last_tick])
         dst_db.commit()
 
-    def process_batch(self, src_db, batch_id, event_list):
+    def process_batch(self, db: Connection, batch_id: int, event_list: EventList) -> None:
         state = self._consumer_state
 
         dst_db = self.get_database(self.target_db)
 
+        assert self.batch_info
+        assert state
         if self.is_batch_done(state, self.batch_info, dst_db):
             return
 
         tick_id = self.batch_info['tick_id']
-        self.process_remote_batch(src_db, tick_id, event_list, dst_db)
+        self.process_remote_batch(db, tick_id, event_list, dst_db)
 
         # this also commits
-        self.finish_remote_batch(src_db, dst_db, tick_id)
+        self.finish_remote_batch(db, dst_db, tick_id)
 
-    def process_root_node(self, dst_db):
+    def process_root_node(self, dst_db: Connection) -> None:
         """This is called on root node, where no processing should happen.
         """
         # extra sleep
@@ -181,7 +193,7 @@ class CascadedConsumer(BaseConsumer):
 
         self.log.info('{standby: 1}')
 
-    def work(self):
+    def work(self) -> int:
         """Refresh state before calling Consumer.work()."""
 
         dst_db = self.get_database(self.target_db)
@@ -189,7 +201,7 @@ class CascadedConsumer(BaseConsumer):
 
         if self._consumer_state['node_type'] == 'root':
             self.process_root_node(dst_db)
-            return None
+            return 0
 
         if not self.provider_connstr:
             raise Exception('provider_connstr not set')
@@ -197,7 +209,7 @@ class CascadedConsumer(BaseConsumer):
 
         return super().work()
 
-    def refresh_state(self, dst_db, full_logic=True):
+    def refresh_state(self, dst_db: Connection, full_logic: bool = True) -> DictRow:
         """Fetch consumer state from target node.
 
         This also sleeps if pause is set and updates
@@ -232,7 +244,7 @@ class CascadedConsumer(BaseConsumer):
 
         return state
 
-    def is_batch_done(self, state, batch_info, dst_db):
+    def is_batch_done(self, state: DictRow, batch_info: BatchInfo, dst_db: Connection) -> bool:
         cur_tick = batch_info['tick_id']
         prev_tick = batch_info['prev_tick_id']
         dst_tick = state['completed_tick']
@@ -252,7 +264,7 @@ class CascadedConsumer(BaseConsumer):
         raise Exception('Lost position: batch %s..%s, dst has %s' % (
                         prev_tick, cur_tick, dst_tick))
 
-    def process_remote_batch(self, src_db, tick_id, event_list, dst_db):
+    def process_remote_batch(self, src_db: Connection, tick_id: int, event_list: EventList, dst_db: Connection) -> None:
         """Per-batch callback.
 
         By default just calls process_remote_event() in loop."""
@@ -261,7 +273,7 @@ class CascadedConsumer(BaseConsumer):
         for ev in event_list:
             self.process_remote_event(src_curs, dst_curs, ev)
 
-    def process_remote_event(self, src_curs, dst_curs, ev):
+    def process_remote_event(self, src_curs: Cursor, dst_curs: Cursor, ev: Event) -> None:
         """Per-event callback.
 
         By default ignores cascading events and gives error on others.
@@ -273,7 +285,7 @@ class CascadedConsumer(BaseConsumer):
         else:
             raise Exception('Unhandled event type in queue: %s' % ev.ev_type)
 
-    def finish_remote_batch(self, src_db, dst_db, tick_id):
+    def finish_remote_batch(self, src_db: Connection, dst_db: Connection, tick_id: int) -> None:
         """Called after event processing.  This should finish
         work on remote db and commit there.
         """
@@ -281,7 +293,7 @@ class CascadedConsumer(BaseConsumer):
         q = "select * from pgq_node.set_consumer_completed(%s, %s, %s)"
         self.exec_cmd(dst_db, q, [self.queue_name, self.consumer_name, tick_id])
 
-    def exception_hook(self, det, emsg):
+    def exception_hook(self, det: Any, emsg: str) -> None:
         try:
             dst_db = self.get_database(self.target_db)
             q = "select * from pgq_node.set_consumer_error(%s, %s, %s)"

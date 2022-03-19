@@ -1,6 +1,10 @@
 """PgQ cooperative consumer for Python.
 """
 
+from typing import Sequence, Optional
+
+from skytools.basetypes import Cursor
+
 from pgq.consumer import Consumer
 
 __all__ = ['CoopConsumer']
@@ -22,7 +26,10 @@ class CoopConsumer(Consumer):
         #subconsumer_timeout = 1 hour
     """
 
-    def __init__(self, service_name, db_name, args):
+    subconsumer_name: str
+    subconsumer_timeout: str
+
+    def __init__(self, service_name: str, db_name: str, args: Sequence[str]) -> None:
         """Initialize new subconsumer.
 
         @param service_name: service_name for DBScript
@@ -35,7 +42,7 @@ class CoopConsumer(Consumer):
         self.subconsumer_name = self.cf.get("subconsumer_name")
         self.subconsumer_timeout = self.cf.get("subconsumer_timeout", "")
 
-    def register_consumer(self):
+    def register_consumer(self) -> int:
         """Registration for subconsumer."""
 
         self.log.info("Registering consumer on source queue")
@@ -48,7 +55,7 @@ class CoopConsumer(Consumer):
 
         return res
 
-    def unregister_consumer(self):
+    def unregister_consumer(self) -> None:
         """Unregistration for subconsumer."""
 
         self.log.info("Unregistering consumer from source queue")
@@ -58,7 +65,7 @@ class CoopConsumer(Consumer):
                    [self.queue_name, self.consumer_name, self.subconsumer_name])
         db.commit()
 
-    def _load_next_batch(self, curs):
+    def _load_next_batch(self, curs: Cursor) -> Optional[int]:
         """Allocate next batch. (internal)"""
 
         if self.subconsumer_timeout:
@@ -69,7 +76,7 @@ class CoopConsumer(Consumer):
             curs.execute(q, [self.queue_name, self.consumer_name, self.subconsumer_name])
         return curs.fetchone()[0]
 
-    def _finish_batch(self, curs, batch_id, ev_list):
+    def _finish_batch(self, curs: Cursor, batch_id: int, ev_list) -> None:
         """Finish batch. (internal)"""
 
         self._flush_retry(curs, batch_id, ev_list)

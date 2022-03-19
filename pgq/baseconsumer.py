@@ -5,15 +5,22 @@ todo:
     - tag_done() by default
 """
 
+from typing import Optional, Sequence, List, Iterator, Union, Dict, Any
+
 import sys
 import time
+import optparse
 
 import skytools
+from skytools.basetypes import Cursor, Connection, DictRow
 
 from pgq.event import Event
 
 __all__ = ['BaseConsumer', 'BaseBatchWalker']
 
+
+EventList = Union[List[Event], "BaseBatchWalker"]
+BatchInfo = Dict[str, Any]
 
 class BaseBatchWalker(object):
     """Lazy iterator over batch events.
@@ -25,7 +32,16 @@ class BaseBatchWalker(object):
      - len() after that
     """
 
-    def __init__(self, curs, batch_id, queue_name, fetch_size=300, consumer_filter=None):
+    queue_name: str
+    fetch_size: int
+    sql_cursor: str
+    curs: Cursor
+    length: int
+    batch_id: int
+    fetch_status: int
+    consumer_filter: Optional[str]
+
+    def __init__(self, curs: Cursor, batch_id: int, queue_name: str, fetch_size: int = 300, consumer_filter: Optional[str] = None) -> None:
         self.queue_name = queue_name
         self.fetch_size = fetch_size
         self.sql_cursor = "batch_walker"
@@ -35,10 +51,10 @@ class BaseBatchWalker(object):
         self.fetch_status = 0  # 0-not started, 1-in-progress, 2-done
         self.consumer_filter = consumer_filter
 
-    def _make_event(self, queue_name, row):
+    def _make_event(self, queue_name: str, row: DictRow) -> Event:
         return Event(queue_name, row)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Event]:
         if self.fetch_status:
             raise Exception("BatchWalker: double fetch? (%d)" % self.fetch_status)
         self.fetch_status = 1
@@ -69,7 +85,7 @@ class BaseBatchWalker(object):
 
         self.fetch_status = 2
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.length
 
 
@@ -115,35 +131,36 @@ class BaseConsumer(skytools.DBScript):
     """
 
     # by default, use cursor-based fetch
-    default_lazy_fetch = 300
+    default_lazy_fetch: int = 300
 
     # should reader connection be used in autocommit mode
-    pgq_autocommit = 0
+    pgq_autocommit: int = 0
 
     # proper variables
-    consumer_name = None
-    queue_name = None
+    consumer_name: str
+    queue_name: str
 
     # compat variables
-    pgq_queue_name = None
-    pgq_consumer_id = None
+    pgq_queue_name: Optional[str] = None
+    pgq_consumer_id: Optional[str] = None
 
-    pgq_lazy_fetch = None
-    pgq_min_count = None
-    pgq_min_interval = None
-    pgq_min_lag = None
+    pgq_lazy_fetch: Optional[int] = None
+    pgq_min_count: Optional[int] = None
+    pgq_min_interval: Optional[str] = None
+    pgq_min_lag: Optional[str] = None
 
-    batch_info = None
+    batch_info: Optional[BatchInfo] = None
 
-    consumer_filter = None
+    consumer_filter: Optional[str] = None
 
-    keepalive_stats = None
+    keepalive_stats: int
     # statistics: time spent waiting for events
-    idle_start = None
+    idle_start: float
+    stat_batch_start: float
 
     _batch_walker_class = BaseBatchWalker
 
-    def __init__(self, service_name, db_name, args):
+    def __init__(self, service_name: str, db_name: str, args: Sequence[str]) -> None:
         """Initialize new consumer.
 
         @param service_name: service_name for DBScript
@@ -179,7 +196,7 @@ class BaseConsumer(skytools.DBScript):
 
         self.idle_start = time.time()
 
-    def reload(self):
+    def reload(self) -> None:
         skytools.DBScript.reload(self)
 
         self.pgq_lazy_fetch = self.cf.getint("pgq_lazy_fetch", self.default_lazy_fetch)
@@ -199,7 +216,7 @@ class BaseConsumer(skytools.DBScript):
 
         self.keepalive_stats = self.cf.getint("keepalive_stats", 300)
 
-    def startup(self):
+    def startup(self) -> None:
         """Handle commands here.  __init__ does not have error logging."""
         if self.options.register:
             self.register_consumer()
@@ -209,7 +226,7 @@ class BaseConsumer(skytools.DBScript):
             sys.exit(0)
         return skytools.DBScript.startup(self)
 
-    def init_optparse(self, parser=None):
+    def init_optparse(self, parser: Optional[optparse.OptionParser] = None) -> optparse.OptionParser:
         p = super().init_optparse(parser)
         p.add_option('--register', action='store_true',
                      help='register consumer on queue')
@@ -217,14 +234,14 @@ class BaseConsumer(skytools.DBScript):
                      help='unregister consumer from queue')
         return p
 
-    def process_event(self, db, event):
+    def process_event(self, db: Connection, event: Event) -> None:
         """Process one event.
 
         Should be overridden by user code.
         """
         raise Exception("needs to be implemented")
 
-    def process_batch(self, db, batch_id, event_list):
+    def process_batch(self, db: Connection, batch_id: int, event_list: EventList) -> None:
         """Process all events in batch.
 
         By default calls process_event for each.
@@ -233,7 +250,7 @@ class BaseConsumer(skytools.DBScript):
         for ev in event_list:
             self.process_event(db, ev)
 
-    def work(self):
+    def work(self) -> int:
         """Do the work loop, once (internal).
         Returns: true if wants to be called again,
         false if script can sleep.
@@ -264,7 +281,7 @@ class BaseConsumer(skytools.DBScript):
 
         return 1
 
-    def register_consumer(self):
+    def register_consumer(self) -> int:
         self.log.info("Registering consumer on source queue")
         db = self.get_database(self.db_name)
         cx = db.cursor()
@@ -275,7 +292,7 @@ class BaseConsumer(skytools.DBScript):
 
         return res
 
-    def unregister_consumer(self):
+    def unregister_consumer(self) -> None:
         self.log.info("Unregistering consumer from source queue")
         db = self.get_database(self.db_name)
         cx = db.cursor()
@@ -283,13 +300,13 @@ class BaseConsumer(skytools.DBScript):
                    [self.queue_name, self.consumer_name])
         db.commit()
 
-    def _launch_process_batch(self, db, batch_id, ev_list):
+    def _launch_process_batch(self, db: Connection, batch_id: int, ev_list: EventList) -> None:
         self.process_batch(db, batch_id, ev_list)
 
-    def _make_event(self, queue_name, row):
+    def _make_event(self, queue_name: str, row: DictRow) -> Event:
         return Event(queue_name, row)
 
-    def _load_batch_events_old(self, curs, batch_id):
+    def _load_batch_events_old(self, curs: Cursor, batch_id: int) -> List[Event]:
         """Fetch all events for this batch."""
 
         # load events
@@ -307,7 +324,7 @@ class BaseConsumer(skytools.DBScript):
 
         return ev_list
 
-    def _load_batch_events(self, curs, batch_id):
+    def _load_batch_events(self, curs: Cursor, batch_id: int) -> EventList:
         """Fetch all events for this batch."""
 
         if self.pgq_lazy_fetch:
@@ -315,13 +332,13 @@ class BaseConsumer(skytools.DBScript):
         else:
             return self._load_batch_events_old(curs, batch_id)
 
-    def _load_next_batch(self, curs):
+    def _load_next_batch(self, curs: Cursor) -> Optional[int]:
         """Allocate next batch. (internal)"""
 
         q = """select * from pgq.next_batch_custom(%s, %s, %s, %s, %s)"""
         curs.execute(q, [self.queue_name, self.consumer_name,
                          self.pgq_min_lag, self.pgq_min_count, self.pgq_min_interval])
-        inf = curs.fetchone().copy()
+        inf = dict(curs.fetchone().items())
         inf['tick_id'] = inf['cur_tick_id']
         inf['batch_end'] = inf['cur_tick_time']
         inf['batch_start'] = inf['prev_tick_time']
@@ -330,19 +347,19 @@ class BaseConsumer(skytools.DBScript):
         self.batch_info = inf
         return self.batch_info['batch_id']
 
-    def _finish_batch(self, curs, batch_id, ev_list):
+    def _finish_batch(self, curs: Cursor, batch_id: int, ev_list: EventList) -> None:
         """Tag events and notify that the batch is done."""
 
         curs.execute("select pgq.finish_batch(%s)", [batch_id])
 
-    def stat_start(self):
+    def stat_start(self) -> None:
         t = time.time()
         self.stat_batch_start = t
         if self.stat_batch_start - self.idle_start > self.keepalive_stats:
             self.stat_put('idle', round(self.stat_batch_start - self.idle_start, 4))
             self.idle_start = t
 
-    def stat_end(self, count):
+    def stat_end(self, count: int) -> None:
         t = time.time()
         self.stat_put('count', count)
         self.stat_put('duration', round(t - self.stat_batch_start, 4))

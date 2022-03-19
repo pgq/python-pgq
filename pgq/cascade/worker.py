@@ -5,11 +5,14 @@ CascadedConsumer that also maintains node.
 
 import sys
 import time
+import datetime
 
-from typing import Sequence, List
+from typing import Sequence, List, Dict, Optional, cast
 
 import skytools
-from pgq.cascade.consumer import CascadedConsumer
+from skytools.basetypes import Cursor, Connection, DictRow
+from pgq.cascade.consumer import CascadedConsumer, EventList
+from pgq.baseconsumer import BatchInfo
 from pgq.event import Event
 from pgq.producer import bulk_insert_events
 
@@ -40,7 +43,7 @@ class WorkerState(object):
     sync_watermark = 0      # ?
     wm_sync_nodes: Sequence[str] = []
 
-    def __init__(self, queue_name, nst):
+    def __init__(self, queue_name: str, nst: DictRow) -> None:
         self.node_type = nst['node_type']
         self.node_name = nst['node_name']
         self.local_watermark = nst['local_watermark']
@@ -67,7 +70,7 @@ class WorkerState(object):
             if 'sync_watermark' in self.node_attrs:
                 slist = self.node_attrs['sync_watermark']
                 self.sync_watermark = 1
-                self.wm_sync_nodes = slist.split(',')
+                self.wm_sync_nodes = slist.split(',') if slist else []
             else:
                 self.process_global_wm = 1
         elif ntype == 'leaf' and not ctype:
@@ -106,25 +109,25 @@ class CascadedWorker(CascadedConsumer):
         #local_wm_publish_period = 300
     """
 
-    global_wm_publish_time = 0
-    global_wm_publish_period = 5 * 60
+    global_wm_publish_time: float = 0
+    global_wm_publish_period: float = 5 * 60
 
-    local_wm_publish_time = 0
-    local_wm_publish_period = 5 * 60
+    local_wm_publish_time: float = 0
+    local_wm_publish_period: float = 5 * 60
 
-    max_evbuf = 500
-    cur_event_seq = 0
-    cur_max_id = 0
-    seq_buffer = 10000
+    max_evbuf: int = 500
+    cur_event_seq: int = 0
+    cur_max_id: int = 0
+    seq_buffer: int = 10000
 
-    main_worker = True
+    main_worker: bool = True
 
-    _worker_state = None
+    _worker_state: Optional[WorkerState] = None
     ev_buf: List[Event] = []
 
-    real_global_wm = None
+    real_global_wm: Optional[int] = None
 
-    def reload(self):
+    def reload(self) -> None:
         super().reload()
 
         self.global_wm_publish_period = self.cf.getfloat('global_wm_publish_period',
@@ -132,10 +135,12 @@ class CascadedWorker(CascadedConsumer):
         self.local_wm_publish_period = self.cf.getfloat('local_wm_publish_period',
                                                         CascadedWorker.local_wm_publish_period)
 
-    def process_remote_batch(self, src_db, tick_id, event_list, dst_db):
+    def process_remote_batch(self, src_db: Connection, tick_id: int, event_list: EventList, dst_db: Connection) -> None:
         """Worker-specific event processing."""
         self.ev_buf = []
         max_id = 0
+
+        assert self._worker_state
 
         if self._worker_state.wait_behind:
             self.wait_for_tick(dst_db, tick_id)
@@ -157,22 +162,23 @@ class CascadedWorker(CascadedConsumer):
         if max_id > self.cur_max_id:
             self.cur_max_id = max_id
 
-    def wait_for_tick(self, dst_db, tick_id):
+    def wait_for_tick(self, dst_db: Connection, tick_id: int) -> None:
         """On combined-branch leaf needs to wait from tick
         to appear from combined-root.
         """
         dst_db.commit()
-        while self._worker_state.wait_behind:
+        while self._worker_state and self._worker_state.wait_behind:
             cst = self._consumer_state
-            if cst['completed_tick'] >= tick_id:
+            if cst and cst['completed_tick'] >= tick_id:
                 return
             self.sleep(10 * self.loop_delay)
             self._consumer_state = self.refresh_state(dst_db)
             if not self.looping:
                 sys.exit(0)
 
-    def is_batch_done(self, state, batch_info, dst_db):
+    def is_batch_done(self, state: DictRow, batch_info: BatchInfo, dst_db: Connection) -> bool:
         wst = self._worker_state
+        assert wst
 
         # on combined-branch the target can get several batches ahead
         if wst.wait_behind:
@@ -209,7 +215,7 @@ class CascadedWorker(CascadedConsumer):
             self.create_branch_tick(dst_db, cur_tick, tick_time)
         return True
 
-    def publish_local_wm(self, src_db, dst_db):
+    def publish_local_wm(self, src_db: Connection, dst_db: Connection) -> None:
         """Send local watermark to provider.
         """
 
@@ -218,6 +224,8 @@ class CascadedWorker(CascadedConsumer):
             return
 
         st = self._worker_state
+        assert st
+        assert self.batch_info
         wm = st.local_watermark
         if st.sync_watermark:
             # dont send local watermark upstream
@@ -279,7 +287,7 @@ class CascadedWorker(CascadedConsumer):
             dst_curs.execute(q, [self.queue_name, wm])
             dst_db.commit()
 
-    def _get_node_map(self, curs):
+    def _get_node_map(self, curs: Cursor) -> Dict[str, DictRow]:
         q = "select node_name, node_location, dead from pgq_node.get_queue_locations(%s)"
         curs.execute(q, [self.queue_name])
         res = {}
@@ -287,7 +295,7 @@ class CascadedWorker(CascadedConsumer):
             res[row['node_name']] = row
         return res
 
-    def process_remote_event(self, src_curs, dst_curs, ev):
+    def process_remote_event(self, src_curs: Cursor, dst_curs: Cursor, ev: Event) -> None:
         """Handle cascading events.
         """
 
@@ -310,6 +318,7 @@ class CascadedWorker(CascadedConsumer):
 
         self.log.debug("got cascade event: %s(%s)", t, ev.ev_data)
         st = self._worker_state
+        assert st
         if t == "pgq.location-info":
             node = ev.ev_data
             loc = ev.ev_extra2
@@ -339,12 +348,13 @@ class CascadedWorker(CascadedConsumer):
         else:
             raise Exception("unknown cascade event: %s" % t)
 
-    def finish_remote_batch(self, src_db, dst_db, tick_id):
+    def finish_remote_batch(self, src_db: Connection, dst_db: Connection, tick_id: int) -> None:
         """Worker-specific cleanup on target node.
         """
 
         # merge-leaf on branch should not update tick pos
         st = self._worker_state
+        assert st
         if st.wait_behind:
             dst_db.commit()
 
@@ -367,7 +377,7 @@ class CascadedWorker(CascadedConsumer):
         super().finish_remote_batch(src_db, dst_db, tick_id)
 
         if self.main_worker:
-            if st.create_tick:
+            if st.create_tick and self.batch_info:
                 # create actual tick
                 tick_id = self.batch_info['tick_id']
                 tick_time = self.batch_info['batch_end']
@@ -375,7 +385,7 @@ class CascadedWorker(CascadedConsumer):
             if st.local_wm_publish:
                 self.publish_local_wm(src_db, dst_db)
 
-    def create_branch_tick(self, dst_db, tick_id, tick_time):
+    def create_branch_tick(self, dst_db: Connection, tick_id: int, tick_time: datetime.datetime) -> None:
         q = "select pgq.ticker(%s, %s, %s, %s)"
         # execute it in autocommit mode
         ilev = dst_db.isolation_level
@@ -384,7 +394,7 @@ class CascadedWorker(CascadedConsumer):
         dst_curs.execute(q, [self.pgq_queue_name, tick_id, tick_time, self.cur_max_id])
         dst_db.set_isolation_level(ilev)
 
-    def copy_event(self, dst_curs, ev, filtered_copy):
+    def copy_event(self, dst_curs: Cursor, ev: Event, filtered_copy: int) -> None:
         """Add event to copy buffer.
         """
         if not self.main_worker:
@@ -397,14 +407,14 @@ class CascadedWorker(CascadedConsumer):
 
         if ev.type == 'pgq.global-watermark':
             st = self._worker_state
-            if st.sync_watermark:
+            if st and st.sync_watermark:
                 # replace payload with synced global watermark
-                row = ev._event_row.copy()
+                row = dict(ev._event_row.items())
                 row['ev_data'] = str(st.global_watermark)
-                ev = Event(self.queue_name, row)
+                ev = Event(self.queue_name, cast(DictRow, row))
         self.ev_buf.append(ev)
 
-    def flush_events(self, dst_curs):
+    def flush_events(self, dst_curs: Cursor) -> None:
         """Send copy buffer to target queue.
         """
         if len(self.ev_buf) == 0:
@@ -412,21 +422,23 @@ class CascadedWorker(CascadedConsumer):
         flds = ['ev_time', 'ev_type', 'ev_data', 'ev_extra1',
                 'ev_extra2', 'ev_extra3', 'ev_extra4']
         st = self._worker_state
+        assert st
         if st.keep_event_ids:
             flds.append('ev_id')
         bulk_insert_events(dst_curs, self.ev_buf, flds, st.target_queue)
         self.ev_buf = []
 
-    def refresh_state(self, dst_db, full_logic=True):
+    def refresh_state(self, dst_db: Connection, full_logic: bool = True) -> DictRow:
         """Load also node state from target node.
         """
         res = super().refresh_state(dst_db, full_logic)
         q = "select * from pgq_node.get_node_info(%s)"
-        st = self.exec_cmd(dst_db, q, [self.pgq_queue_name])
-        self._worker_state = WorkerState(self.pgq_queue_name, st[0])
+        rows = self.exec_cmd(dst_db, q, [self.pgq_queue_name])
+        assert rows
+        self._worker_state = WorkerState(self.pgq_queue_name, rows[0])
         return res
 
-    def process_root_node(self, dst_db):
+    def process_root_node(self, dst_db: Connection) -> None:
         """On root node send global watermark downstream.
         """
 

@@ -1,11 +1,13 @@
 """Info about node/set/members.  For admin tool.
 """
 
+from typing import Dict, List, Optional, Sequence, Tuple, Mapping, Any, Union
+
 import datetime
 import re
 import sys
 
-from typing import Dict
+from skytools.basetypes import DictRow, Cursor
 
 import skytools
 
@@ -19,13 +21,18 @@ LEAF = 'leaf'
 
 class MemberInfo(object):
     """Info about set member."""
-    def __init__(self, row):
+
+    name: str
+    location: Optional[str]
+    dead: bool
+
+    def __init__(self, row: Union[DictRow, Mapping[str, Any]]) -> None:
         self.name = row['node_name']
         self.location = row['node_location']
         self.dead = row['dead']
 
 
-def ival2str(iv):
+def ival2str(iv: datetime.timedelta) -> str:
     res = ""
     tmp, secs = divmod(iv.seconds, 60)
     hrs, mins = divmod(tmp, 60)
@@ -42,33 +49,47 @@ def ival2str(iv):
 class NodeInfo(object):
     """Detailed info about set node."""
 
-    name = None
-    type = None
-    global_watermark = None
-    local_watermark = None
-    completed_tick = None
-    provider_node = None
-    provider_location = None
-    consumer_name = None  # ?
-    worker_name = None    # ?
-    paused = False
-    uptodate = True
-    combined_queue = None
-    combined_type = None
-    target_for = None
-    last_tick = None
-    node_attrs: Dict[str, str] = {}
-    service = None
+    name: str
+    type: str
+    global_watermark: int
+    local_watermark: int
+    completed_tick: int
+    provider_node: Optional[str]
+    provider_location: Optional[str]
+    consumer_name: str
+    worker_name: str
+    paused: bool
+    uptodate: bool
+    combined_queue: Optional[str]
+    combined_type: Optional[str]
+    target_for: Optional[List[str]]
+    last_tick: Optional[str]
+    node_attrs: Dict[str, Optional[str]]
+    service: Optional[str]
 
-    def __init__(self, queue_name, row, main_worker=True, node_name=None, location=None):
+    consumer_map: Dict[str, DictRow]
+    queue_info: Optional[DictRow]
+    _info_lines: List[str]
+    cascaded_consumer_map: Dict[str, DictRow]
+    parent: Optional["NodeInfo"]
+    child_list: List["NodeInfo"]
+    total_childs: int
+    levels: int
+
+    def __init__(self, queue_name: str, row: Optional[DictRow], main_worker: bool = True, node_name: Optional[str] = None, location: Optional[str] = None) -> None:
         self.queue_name = queue_name
         self.main_worker = main_worker
 
         self.parent = None
         self.consumer_map = {}
-        self.queue_info = {}
+        self.queue_info = None
         self._info_lines = []
         self.cascaded_consumer_map = {}
+        self.node_attrs = {}
+        self.child_list = []
+        self.total_childs = 0
+        self.levels = 0
+        self.service = None
 
         self._row = row
 
@@ -78,6 +99,7 @@ class NodeInfo(object):
                 self.service = m.group(1)
 
         if not row:
+            assert node_name
             self.name = node_name
             self.type = 'dead'
             return
@@ -99,7 +121,9 @@ class NodeInfo(object):
         try:
             target_for = row['target_for']
             if isinstance(target_for, str):
-                self.target_for = skytools.parse_pgarray(target_for)
+                nodes = skytools.parse_pgarray(target_for)
+                if nodes:
+                    self.target_for = [n for n in nodes if n]
             else:
                 self.target_for = target_for
         except KeyError:
@@ -111,7 +135,7 @@ class NodeInfo(object):
             if a:
                 self.node_attrs = skytools.db_urldecode(a)
 
-    def __get_target_queue(self):
+    def __get_target_queue(self) -> Optional[str]:
         qname = None
         if self.type == LEAF:
             if self.combined_queue:
@@ -124,12 +148,12 @@ class NodeInfo(object):
             raise Exception("no target queue")
         return qname
 
-    def get_title(self):
+    def get_title(self) -> str:
         if self.service:
             return "%s (%s, %s)" % (self.name, self.type, self.service)
         return "%s (%s)" % (self.name, self.type)
 
-    def get_infolines(self):
+    def get_infolines(self) -> List[str]:
         lst = self._info_lines
 
         lag = None
@@ -137,7 +161,10 @@ class NodeInfo(object):
             root = self.parent
             while root.parent:
                 root = root.parent
-            cinfo = self.parent.consumer_map.get(self.consumer_name)
+            if self.consumer_name:
+                cinfo = self.parent.consumer_map.get(self.consumer_name)
+            else:
+                cinfo = None
             if cinfo and root.queue_info:
                 tick_time = cinfo['tick_time']
                 root_time = root.queue_info['now']
@@ -185,12 +212,12 @@ class NodeInfo(object):
                 lst.append("ERR: %s: %s" % (cname, err))
         return lst
 
-    def add_info_line(self, ln):
+    def add_info_line(self, ln: str) -> None:
         self._info_lines.append(ln)
 
-    def load_status(self, curs):
+    def load_status(self, curs: Cursor) -> None:
         self.consumer_map = {}
-        self.queue_info = {}
+        self.queue_info = None
         self.cascaded_consumer_map = {}
         if self.queue_name:
             q = "select consumer_name, current_timestamp - lag as tick_time,"\
@@ -219,33 +246,38 @@ class QueueInfo(object):
 
     Slightly broken, as all info is per-node.
     """
+    member_map: Dict[str, MemberInfo]
+    local_node: NodeInfo
+    queue_name: str
+    node_map: Dict[str, NodeInfo]
 
-    def __init__(self, queue_name, info_row, member_rows):
+    def __init__(self, queue_name: str, info_row: DictRow, member_rows: Sequence[DictRow]) -> None:
         self.member_map = {}
         for r in member_rows:
             m = MemberInfo(r)
             self._add_member(m)
 
-        m = self.member_map.get(info_row['node_name'])
+        cur = self.member_map.get(info_row['node_name'])
 
-        self.local_node = NodeInfo(queue_name, info_row, location=m and m.location)
+        self.local_node = NodeInfo(queue_name, info_row, location=cur and cur.location or None)
         self.queue_name = queue_name
         self.node_map = {}
         self.add_node(self.local_node)
 
-    def _add_member(self, member):
+    def _add_member(self, member: MemberInfo) -> None:
         self.member_map[member.name] = member
 
-    def get_member(self, name):
+    def get_member(self, name: str) -> Optional[MemberInfo]:
         return self.member_map.get(name)
 
-    def get_node(self, name):
+    def get_node(self, name: str) -> Optional[NodeInfo]:
         return self.node_map.get(name)
 
-    def add_node(self, node):
-        self.node_map[node.name] = node
+    def add_node(self, node: NodeInfo) -> None:
+        if node.name:
+            self.node_map[node.name] = node
 
-    def tag_dead(self, node_name):
+    def tag_dead(self, node_name: str) -> None:
         if node_name in self.node_map:
             self.member_map[node_name].dead = True
         else:
@@ -258,7 +290,7 @@ class QueueInfo(object):
 
     _DATAFMT = "%-30s%s"
 
-    def print_tree(self):
+    def print_tree(self) -> None:
         """Print ascii-tree for set.
         Expects that data for all nodes is filled in."""
 
@@ -272,7 +304,7 @@ class QueueInfo(object):
             for ln in datalines:
                 print(self._DATAFMT % (' ', ln))
 
-    def print_tree_compact(self):
+    def print_tree_compact(self) -> None:
         """Print ascii-tree for set in compact format.
         Expects that data for all nodes is filled in."""
 
@@ -284,12 +316,12 @@ class QueueInfo(object):
             self._tree_calc(root)
             self._print_node_compact(root, '')
 
-    def _print_node_compact(self, node, pfx):
+    def _print_node_compact(self, node: NodeInfo, pfx: str) -> None:
         print(pfx + node.get_title().ljust(60-len(pfx)) + ''.join(ln.ljust(30) for ln in node.get_infolines()))
         for n in node.child_list:
             self._print_node_compact(n, pfx + '   ')
 
-    def _print_node(self, node, pfx, datalines):
+    def _print_node(self, node: NodeInfo, pfx: str, datalines: List[str]) -> List[str]:
         # print a tree fragment for node and info
         # returns list of unprinted data rows
         for ln in datalines:
@@ -303,7 +335,7 @@ class QueueInfo(object):
 
         return datalines
 
-    def _prepare_tree(self):
+    def _prepare_tree(self) -> List[NodeInfo]:
         # reset vars, fill parent and child_list for each node
         # returns list of root nodes (mostly 1)
 
@@ -327,7 +359,7 @@ class QueueInfo(object):
                 root_list.append(node)
         return root_list
 
-    def _tree_calc(self, node):
+    def _tree_calc(self, node: NodeInfo) -> None:
         # calculate levels and count total childs
         # sort the tree based on them
         total = len(node.child_list)
@@ -342,12 +374,12 @@ class QueueInfo(object):
         node.child_list.sort(key=_node_key)
 
 
-def _setpfx(pfx, sfx):
+def _setpfx(pfx: str, sfx: str) -> str:
     if pfx:
         pfx = pfx[:-1] + sfx
     return pfx
 
 
-def _node_key(n):
-    return (n.levels, n.total_childs, n.service or '', n.name)
+def _node_key(n: NodeInfo) -> Tuple[int, int, str, str]:
+    return (n.levels, n.total_childs, n.service or '', n.name or '')
 
