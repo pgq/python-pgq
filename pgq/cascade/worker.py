@@ -126,6 +126,7 @@ class CascadedWorker(CascadedConsumer):
     ev_buf: List[Event] = []
 
     real_global_wm: Optional[int] = None
+    was_wait_behind: bool = False
 
     def reload(self) -> None:
         super().reload()
@@ -141,9 +142,6 @@ class CascadedWorker(CascadedConsumer):
         max_id = 0
 
         assert self._worker_state
-
-        if self._worker_state.wait_behind:
-            self.wait_for_tick(dst_db, tick_id)
 
         st = self._worker_state
         src_curs = src_db.cursor()
@@ -167,7 +165,10 @@ class CascadedWorker(CascadedConsumer):
         to appear from combined-root.
         """
         dst_db.commit()
-        while self._worker_state and self._worker_state.wait_behind:
+        while self._worker_state:
+            if not self._worker_state.wait_behind:
+                # need to switch to waiting on source side
+                return
             cst = self._consumer_state
             if cst and cst['completed_tick'] >= tick_id:
                 return
@@ -177,13 +178,25 @@ class CascadedWorker(CascadedConsumer):
                 sys.exit(0)
 
     def is_batch_done(self, state: DictRow, batch_info: BatchInfo, dst_db: Connection) -> bool:
-        wst = self._worker_state
-        assert wst
 
         # on combined-branch the target can get several batches ahead
-        if wst.wait_behind:
-            # let the wait-behind logic track ticks
-            return False
+        if self._worker_state and self._worker_state.wait_behind:
+            self.wait_for_tick(dst_db, batch_info['tick_id'])
+            state = self._consumer_state
+
+        # handle combined_queue type change (branch->root)
+        if self._worker_state and self.was_wait_behind:
+            cur_tick = batch_info['tick_id']
+            dst_tick = state['completed_tick']
+            if cur_tick <= dst_tick:
+                # current batch is already applied, skip it
+                return True
+            if not self._worker_state.wait_behind:
+                # forget previous state
+                self.was_wait_behind = False
+
+        wst = self._worker_state
+        assert wst
 
         # check if events have processed
         done = super().is_batch_done(state, batch_info, dst_db)
@@ -431,11 +444,14 @@ class CascadedWorker(CascadedConsumer):
     def refresh_state(self, dst_db: Connection, full_logic: bool = True) -> DictRow:
         """Load also node state from target node.
         """
+        queue_name = self.pgq_queue_name or '?'
         res = super().refresh_state(dst_db, full_logic)
         q = "select * from pgq_node.get_node_info(%s)"
-        rows = self.exec_cmd(dst_db, q, [self.pgq_queue_name])
+        rows = self.exec_cmd(dst_db, q, [queue_name])
         assert rows
-        self._worker_state = WorkerState(self.pgq_queue_name, rows[0])
+        self._worker_state = WorkerState(queue_name, rows[0])
+        if self._worker_state.wait_behind:
+            self.was_wait_behind = True
         return res
 
     def process_root_node(self, dst_db: Connection) -> None:
