@@ -1,6 +1,17 @@
 NEWS
 ====
 
+pgq 3.7
+-------
+
+Fixes:
+
+* worker: another wait-behind fix - avoid too eager switch.
+
+Cleanups:
+
+* Additional typing improvements.
+
 pgq 3.6.2
 ---------
 
