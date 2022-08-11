@@ -1,6 +1,13 @@
 NEWS
 ====
 
+pgq 3.7.1
+---------
+
+Fixes:
+
+* worker: fix merge-leaf watermark
+
 pgq 3.7
 -------
 
