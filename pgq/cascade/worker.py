@@ -177,6 +177,10 @@ class CascadedWorker(CascadedConsumer):
             if not self.looping:
                 sys.exit(0)
 
+            # waiting does not reach to finish_remote_batch()
+            src_db = self.get_provider_db(cst)
+            self.publish_local_wm(src_db, dst_db)
+
     def is_batch_done(self, state: DictRow, batch_info: BatchInfo, dst_db: Connection) -> bool:
 
         # on combined-branch the target can get several batches ahead
