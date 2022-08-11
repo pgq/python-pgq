@@ -170,16 +170,19 @@ class CascadedWorker(CascadedConsumer):
                 # need to switch to waiting on source side
                 return
             cst = self._consumer_state
-            if cst and cst['completed_tick'] >= tick_id:
-                return
+            if cst:
+                # waiting does not reach to finish_remote_batch()
+                src_db = self.get_provider_db(cst)
+                self.publish_local_wm(src_db, dst_db)
+
+                # let is_batch_done handle it now
+                if cst['completed_tick'] >= tick_id:
+                    return
+
             self.sleep(10 * self.loop_delay)
             self._consumer_state = self.refresh_state(dst_db)
             if not self.looping:
                 sys.exit(0)
-
-            # waiting does not reach to finish_remote_batch()
-            src_db = self.get_provider_db(cst)
-            self.publish_local_wm(src_db, dst_db)
 
     def is_batch_done(self, state: DictRow, batch_info: BatchInfo, dst_db: Connection) -> bool:
 
