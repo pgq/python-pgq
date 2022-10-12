@@ -90,6 +90,7 @@ class NodeInfo(object):
         self.total_childs = 0
         self.levels = 0
         self.service = None
+        self.provider_node = None
 
         self._row = row
 
