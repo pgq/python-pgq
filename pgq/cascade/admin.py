@@ -489,8 +489,8 @@ class CascadeAdmin(skytools.AdminScript):
         if not self.node_alive(name):
             node = NodeInfo(self.queue_name or '', None, node_name=name, location=location)
             return node
+        db = None
         try:
-            db = None
             db = skytools.connect_database(location)
             db.set_isolation_level(skytools.I_AUTOCOMMIT)
             curs = db.cursor()
