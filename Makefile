@@ -17,7 +17,7 @@ xclean: clean
 	rm -rf .tox dist
 
 test:
-	TEST_DB_NAME=testdb TEST_Q_NAME=testq PGHOST=/tmp PGPORT=5120 tox -e py38
+	PGDATABASE=testdb TEST_Q_NAME=testq PGHOST=/tmp PGPORT=5120 tox -e py38
 
 checkver:
 	@echo "Checking version"
