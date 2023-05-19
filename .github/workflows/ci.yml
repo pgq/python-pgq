@@ -17,13 +17,13 @@ jobs:
     strategy:
       matrix:
         test:
-          - {PY: "3.10", TOXENV: "lint"}
+          - {PY: "3.11", TOXENV: "lint"}
     steps:
       - name: "Checkout"
         uses: actions/checkout@v3
 
       - name: "Setup Python ${{matrix.test.PY}}"
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{matrix.test.PY}}
 
@@ -48,7 +48,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: "Setup Python ${{matrix.test.PY}}"
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{matrix.test.PY}}
 
