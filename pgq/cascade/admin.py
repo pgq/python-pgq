@@ -584,7 +584,7 @@ class CascadeAdmin(skytools.AdminScript):
         cinfo = cmap[consumer]
 
         # is it node worker or plain consumer?
-        is_worker = (ninfo.worker_name == consumer)
+        is_worker = ninfo.worker_name == consumer
 
         # fixme: expect the node to be described already
         q = "select * from pgq_node.register_location(%s, %s, %s, false)"
