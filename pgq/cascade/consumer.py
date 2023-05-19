@@ -105,6 +105,7 @@ class CascadedConsumer(BaseConsumer):
         q = "select * from pgq_node.get_consumer_state(%s, %s)"
         rows = self.exec_cmd(dst_db, q, [self.queue_name, self.consumer_name])
         state = rows[0]
+        self.log.debug("CascadedConsumer.get_consumer_state: state=%r", state)
         return state
 
     def get_provider_db(self, state: DictRow) -> Connection:
@@ -220,6 +221,7 @@ class CascadedConsumer(BaseConsumer):
             q = "select * from pgq_node.get_consumer_state(%s, %s)"
             rows = self.exec_cmd(dst_db, q, [self.queue_name, self.consumer_name])
             state = rows[0]
+            self.log.debug("CascadedConsumer.refresh_state: state=%r", state)
 
             # tag refreshed
             if not state['uptodate'] and full_logic:
@@ -289,6 +291,8 @@ class CascadedConsumer(BaseConsumer):
         """Called after event processing.  This should finish
         work on remote db and commit there.
         """
+        self.log.debug("CascadedConsumer.finish_remote_batch: tick_id=%r", tick_id)
+
         # this also commits
         q = "select * from pgq_node.set_consumer_completed(%s, %s, %s)"
         self.exec_cmd(dst_db, q, [self.queue_name, self.consumer_name, tick_id])

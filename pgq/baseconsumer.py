@@ -7,6 +7,7 @@ todo:
 
 from typing import Optional, Sequence, List, Iterator, Union, Dict, Any
 
+import logging
 import sys
 import time
 import optparse
@@ -41,6 +42,8 @@ class BaseBatchWalker(object):
     fetch_status: int
     consumer_filter: Optional[str]
 
+    log = logging.getLogger("pgq.BaseBatchWalker")
+
     def __init__(self, curs: Cursor, batch_id: int, queue_name: str, fetch_size: int = 300, consumer_filter: Optional[str] = None) -> None:
         self.queue_name = queue_name
         self.fetch_size = fetch_size
@@ -66,6 +69,7 @@ class BaseBatchWalker(object):
         q = "fetch %d from %s" % (self.fetch_size, self.sql_cursor)
         while True:
             rows = self.curs.fetchall()
+            self.log.debug("BaseBatchWalker.iter: fetch batch=%r rows=%r", self.batch_id, len(rows))
             if not len(rows):
                 break
 
@@ -321,6 +325,7 @@ class BaseConsumer(skytools.DBScript):
         for r in rows:
             ev = self._make_event(self.queue_name, r)
             ev_list.append(ev)
+        self.log.debug("BaseConsumer._load_batch_events_old: id=%r num=%r", batch_id, len(ev_list))
 
         return ev_list
 
@@ -345,11 +350,16 @@ class BaseConsumer(skytools.DBScript):
         inf['seq_start'] = inf['prev_tick_event_seq']
         inf['seq_end'] = inf['cur_tick_event_seq']
         self.batch_info = inf
+        self.log.debug(
+            "BaseConsumer._load_next_batch: id=%r prev=%r cur=%r",
+            inf['batch_id'], inf['prev_tick_id'], inf['cur_tick_id'],
+        )
         return self.batch_info['batch_id']
 
     def _finish_batch(self, curs: Cursor, batch_id: int, ev_list: EventList) -> None:
         """Tag events and notify that the batch is done."""
 
+        self.log.debug("BaseConsumer._finish_batch: id=%r", batch_id)
         curs.execute("select pgq.finish_batch(%s)", [batch_id])
 
     def stat_start(self) -> None:

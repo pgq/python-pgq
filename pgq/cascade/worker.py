@@ -148,6 +148,7 @@ class CascadedWorker(CascadedConsumer):
             if ahead:
                 # pretend no batch was available
                 batch_id = None
+                self.log.debug("Wait behind: tick_id=%r completed=%r", tick_id, completed_tick_id)
         return batch_id
 
     def process_batch(self, db: Connection, batch_id: int, event_list: EventList) -> None:
