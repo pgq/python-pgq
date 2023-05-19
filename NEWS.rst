@@ -1,6 +1,13 @@
 NEWS
 ====
 
+pgq 3.7.2
+---------
+
+Fixes:
+
+* status: fix crash on dead node
+
 pgq 3.7.1
 ---------
 
