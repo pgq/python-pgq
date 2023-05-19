@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         test:
-          - {PY: "3.11", TOXENV: "lint"}
+          - {PY: "3.10", TOXENV: "lint"}
     steps:
       - name: "Checkout"
         uses: actions/checkout@v3
