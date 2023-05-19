@@ -59,8 +59,13 @@ jobs:
       - name: "InstallDB"
         run: |
           echo "::group::apt-get-update"
+          sudo -nH apt-get -q update
+          sudo -nH apt install curl ca-certificates gnupg
+          curl https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+          | gpg --dearmor \
+          | sudo -nH tee /etc/apt/trusted.gpg.d/apt.postgresql.org.gpg
           echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main ${{matrix.test.PG}}" \
-          | sudo tee /etc/apt/sources.list.d/pgdg.list
+          | sudo -nH tee /etc/apt/sources.list.d/pgdg.list
           sudo -nH apt-get -q update
           echo "::endgroup::"
 
