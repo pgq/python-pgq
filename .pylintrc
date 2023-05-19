@@ -78,6 +78,7 @@ disable=bare-except,
 	duplicate-code,
         consider-using-f-string,
         unused-private-member,
+        broad-exception-raised,
 
 	arguments-differ,
 	multiple-statements,
@@ -513,5 +514,5 @@ known-third-party=enchant
 
 # Exceptions that will emit a warning when being caught. Defaults to
 # "BaseException, Exception".
-overgeneral-exceptions=BaseException,
-                       Exception
+overgeneral-exceptions=builtins.BaseException,
+                       builtins.Exception
