@@ -91,6 +91,9 @@ class NodeInfo(object):
         self.levels = 0
         self.service = None
         self.provider_node = None
+        self.last_tick = None
+        self.paused = None
+        self.uptodate = None
 
         self._row = row
 
