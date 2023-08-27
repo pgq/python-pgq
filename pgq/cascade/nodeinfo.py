@@ -91,9 +91,6 @@ class NodeInfo(object):
         self.levels = 0
         self.service = None
         self.provider_node = None
-        self.last_tick = None
-        self.paused = None
-        self.uptodate = None
 
         self._row = row
 
@@ -106,6 +103,9 @@ class NodeInfo(object):
             assert node_name
             self.name = node_name
             self.type = 'dead'
+            self.last_tick = None
+            self.paused = True
+            self.uptodate = False
             return
 
         self.name = row['node_name']
