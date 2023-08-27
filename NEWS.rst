@@ -1,6 +1,16 @@
 NEWS
 ====
 
+pgq 3.7.3
+---------
+
+Fixes:
+
+* worker: another refactor for wait-behind - use dedicated code path for it,
+  following main path makes things too complicated.  Fixes the problem of
+  missing node location events.
+* nodeinfo: set more fields on dead node
+
 pgq 3.7.2
 ---------
 
