@@ -106,7 +106,7 @@ class LocalConsumer(BaseConsumer):
         else:
             self.log.info("Ticks match: Queue=%d Local=%d", queue_tick, local_tick)
 
-    def work(self) -> int:
+    def work(self) -> Optional[int]:
         if self.work_state < 0:
             self.check_queue()
         return super().work()

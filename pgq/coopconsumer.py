@@ -5,6 +5,7 @@ from typing import Sequence, Optional
 
 from skytools.basetypes import Cursor
 
+from pgq.baseconsumer import EventList
 from pgq.consumer import Consumer
 
 __all__ = ['CoopConsumer']
@@ -76,7 +77,7 @@ class CoopConsumer(Consumer):
             curs.execute(q, [self.queue_name, self.consumer_name, self.subconsumer_name])
         return curs.fetchone()[0]
 
-    def _finish_batch(self, curs: Cursor, batch_id: int, ev_list) -> None:
+    def _finish_batch(self, curs: Cursor, batch_id: int, ev_list: EventList) -> None:
         """Finish batch. (internal)"""
 
         self._flush_retry(curs, batch_id, ev_list)

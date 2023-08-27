@@ -10,8 +10,8 @@ from typing import Sequence, List, Dict, Optional, cast
 
 import skytools
 from skytools.basetypes import Cursor, Connection, DictRow
-from pgq.cascade.consumer import CascadedConsumer, EventList
-from pgq.baseconsumer import BatchInfo
+from pgq.cascade.consumer import CascadedConsumer
+from pgq.baseconsumer import BatchInfo, EventList
 from pgq.event import Event
 from pgq.producer import bulk_insert_events
 

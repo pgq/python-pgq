@@ -7,7 +7,8 @@ import sys
 import optparse
 
 from skytools.basetypes import Cursor, Connection
-from pgq.consumer import Consumer, EventList
+from pgq.baseconsumer import EventList
+from pgq.consumer import Consumer
 
 __all__ = ['RemoteConsumer', 'SerialConsumer']
 

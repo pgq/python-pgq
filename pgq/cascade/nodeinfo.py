@@ -139,19 +139,6 @@ class NodeInfo(object):
             if a:
                 self.node_attrs = skytools.db_urldecode(a)
 
-    def __get_target_queue(self) -> Optional[str]:
-        qname = None
-        if self.type == LEAF:
-            if self.combined_queue:
-                qname = self.combined_queue
-            else:
-                return None
-        else:
-            qname = self.queue_name
-        if qname is None:
-            raise Exception("no target queue")
-        return qname
-
     def get_title(self) -> str:
         if self.service:
             return "%s (%s, %s)" % (self.name, self.type, self.service)

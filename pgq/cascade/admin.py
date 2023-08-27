@@ -967,7 +967,7 @@ class CascadeAdmin(skytools.AdminScript):
                 res[n.name] = 1
         return list(sorted(res.keys()))
 
-    def cmd_tag_dead(self, dead_node_name) -> None:
+    def cmd_tag_dead(self, dead_node_name: str) -> None:
         queue_info = self.load_local_info()
 
         # tag node dead in memory
@@ -1408,7 +1408,7 @@ class CascadeAdmin(skytools.AdminScript):
 
     _json_dump_file = None
 
-    def resurrect_dump_event(self, ev: DictRow, stats: Dict[str, int], batch_info: DictRow) -> None:
+    def resurrect_dump_event(self, ev: DictRow, stats: Dict[str, Any], batch_info: DictRow) -> None:
         if self._json_dump_file is None:
             self._json_dump_file = open(RESURRECT_DUMP_FILE, "w", encoding="utf8")   # pylint: disable=consider-using-with
             sep = '['
@@ -1555,7 +1555,7 @@ class CascadeAdmin(skytools.AdminScript):
 
     _node_cache: Dict[str, Optional[NodeInfo]] = {}
 
-    def get_node_info_opt(self, node_name) -> Optional[NodeInfo]:
+    def get_node_info_opt(self, node_name: str) -> Optional[NodeInfo]:
         """Cached node info lookup."""
         if node_name in self._node_cache:
             return self._node_cache[node_name]
@@ -1563,7 +1563,7 @@ class CascadeAdmin(skytools.AdminScript):
         self._node_cache[node_name] = inf
         return inf
 
-    def get_node_info(self, node_name) -> NodeInfo:
+    def get_node_info(self, node_name: str) -> NodeInfo:
         """Cached node info lookup."""
         inf = self.get_node_info_opt(node_name)
         if not inf:

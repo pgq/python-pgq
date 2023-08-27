@@ -1,7 +1,7 @@
 """PgQ event container.
 """
 
-from typing import Any, Optional, Iterable, Tuple
+from typing import Any, Optional, Mapping, KeysView, Iterator, ValuesView, ItemsView
 
 from skytools.basetypes import DictRow
 
@@ -32,7 +32,7 @@ _fldmap = {
 }
 
 
-class Event(object):
+class Event(Mapping[str, Any]):
     """Event data for consumers.
 
     Will be removed from the queue by default.
@@ -51,31 +51,37 @@ class Event(object):
     def __getattr__(self, key: str) -> Any:
         return self._event_row[_fldmap[key]]
 
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._event_row)
+
+    def __len__(self) -> int:
+        return len(self._event_row)
+
     # would be better in RetriableEvent only since we don't care but
     # unfortunately it needs to be defined here due to compatibility concerns
     def tag_done(self) -> None:
         pass
 
     # be also dict-like
-    def __getitem__(self, k: str) -> Any:
-        return self._event_row.__getitem__(k)
+    def __getitem__(self, key: str) -> Any:
+        return self._event_row.__getitem__(key)
 
-    def __contains__(self, k: str) -> bool:
-        return self._event_row.__contains__(k)
+    def __contains__(self, key: object) -> bool:
+        return self._event_row.__contains__(key)
 
-    def get(self, k: str, d: Optional[Any] = None) -> Any:
-        return self._event_row.get(k, d)
+    def get(self, key: str, default: Optional[Any] = None) -> Any:
+        return self._event_row.get(key, default)
 
-    def has_key(self, k: str) -> bool:
-        return k in self._event_row
+    def has_key(self, key: str) -> bool:
+        return key in self._event_row
 
-    def keys(self) -> Iterable[str]:
+    def keys(self) -> KeysView[str]:
         return self._event_row.keys()
 
-    def values(self) -> Iterable[Any]:
+    def values(self) -> ValuesView[Any]:
         return self._event_row.values()
 
-    def items(self) -> Iterable[Tuple[str, Any]]:
+    def items(self) -> ItemsView[str, Any]:
         return self._event_row.items()
 
     def __str__(self) -> str:

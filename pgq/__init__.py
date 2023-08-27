@@ -4,6 +4,7 @@ from pgq.cascade.admin import CascadeAdmin
 from pgq.cascade.consumer import CascadedConsumer
 from pgq.cascade.nodeinfo import MemberInfo, NodeInfo, QueueInfo
 from pgq.cascade.worker import CascadedWorker
+from pgq.baseconsumer import EventList, BatchInfo
 from pgq.consumer import Consumer
 from pgq.coopconsumer import CoopConsumer
 from pgq.event import Event
@@ -17,7 +18,8 @@ __all__ = [
     'bulk_insert_events', 'insert_event',
     'RemoteConsumer', 'SerialConsumer', 'PGQStatus',
     'CascadeAdmin', 'CascadedConsumer', 'CascadedWorker',
-    'MemberInfo', 'NodeInfo', 'QueueInfo'
+    'MemberInfo', 'NodeInfo', 'QueueInfo', 'EventList',
+    'BatchInfo',
 ]
 
 __version__ = '3.7.3'

@@ -194,7 +194,7 @@ class CascadedConsumer(BaseConsumer):
 
         self.log.info('{standby: 1}')
 
-    def work(self) -> int:
+    def work(self) -> Optional[int]:
         """Refresh state before calling Consumer.work()."""
 
         dst_db = self.get_database(self.target_db)

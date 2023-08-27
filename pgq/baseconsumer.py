@@ -212,7 +212,7 @@ class BaseConsumer(skytools.DBScript):
 
         # filter out specific tables only
         tfilt = []
-        for t in self.cf.getlist('table_filter', ''):
+        for t in self.cf.getlist('table_filter', []):
             tfilt.append(skytools.quote_literal(skytools.fq_name(t)))
         if len(tfilt) > 0:
             expr = "ev_extra1 in (%s)" % ','.join(tfilt)
@@ -254,7 +254,7 @@ class BaseConsumer(skytools.DBScript):
         for ev in event_list:
             self.process_event(db, ev)
 
-    def work(self) -> int:
+    def work(self) -> Optional[int]:
         """Do the work loop, once (internal).
         Returns: true if wants to be called again,
         false if script can sleep.
