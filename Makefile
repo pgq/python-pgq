@@ -10,11 +10,17 @@ clean:
 	rm -rf build *.egg-info */__pycache__ tests/*.pyc
 	rm -rf .pybuild MANIFEST
 
+lint:
+	tox -q -e lint
+
 xlint:
-	tox -e xlint
+	tox -q -e xlint
 
 xclean: clean
 	rm -rf .tox dist
+
+sdist:
+	python3 setup.py -q sdist
 
 test:
 	PGDATABASE=testdb TEST_Q_NAME=testq PGHOST=/tmp PGPORT=5120 tox -e py38
