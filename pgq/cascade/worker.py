@@ -3,7 +3,6 @@
 CascadedConsumer that also maintains node.
 """
 
-import sys
 import time
 import datetime
 
@@ -136,6 +135,45 @@ class CascadedWorker(CascadedConsumer):
         self.local_wm_publish_period = self.cf.getfloat('local_wm_publish_period',
                                                         CascadedWorker.local_wm_publish_period)
 
+    def _load_next_batch(self, curs: Cursor) -> Optional[int]:
+        # handle wait_behind without blocking whole loop
+        batch_id = super()._load_next_batch(curs)
+        wst = self._worker_state
+        cst = self._consumer_state
+        info = self.batch_info
+        if batch_id is not None and wst and cst and info and wst.wait_behind:
+            tick_id = info['tick_id']
+            completed_tick_id = cst['completed_tick']
+            ahead = tick_id > completed_tick_id
+            if ahead:
+                # pretend no batch was available
+                batch_id = None
+                self.log.debug("Wait behind: tick_id=%r completed=%r", tick_id, completed_tick_id)
+        return batch_id
+
+    def process_batch(self, db: Connection, batch_id: int, event_list: EventList) -> None:
+        # switch to alternative path for wait_behind
+        wst = self._worker_state
+        if wst and wst.wait_behind:
+            dst_db = self.get_database(self.target_db)
+            self.process_wait_behind(db, batch_id, event_list, dst_db)
+        else:
+            super().process_batch(db, batch_id, event_list)
+
+    def process_wait_behind(self, src_db: Connection, batch_id: int, event_list: EventList, dst_db: Connection) -> None:
+        # data events are already applied to target from main (target) queue,
+        # need to process system events from events for leaf node.
+        src_curs = src_db.cursor()
+        dst_curs = dst_db.cursor()
+        for ev in event_list:
+            if ev.ev_type.split('.', 1)[0] in ("pgq", "londiste"):
+                self.process_remote_event(src_curs, dst_curs, ev)
+
+        st = self._worker_state
+        assert st
+        if st.local_wm_publish and self.main_worker:
+            self.publish_local_wm(src_db, dst_db)
+
     def process_remote_batch(self, src_db: Connection, tick_id: int, event_list: EventList, dst_db: Connection) -> None:
         """Worker-specific event processing."""
         self.ev_buf = []
@@ -160,39 +198,7 @@ class CascadedWorker(CascadedConsumer):
         if max_id > self.cur_max_id:
             self.cur_max_id = max_id
 
-    def wait_for_tick(self, dst_db: Connection, tick_id: int) -> None:
-        """On combined-branch leaf needs to wait from tick
-        to appear from combined-root.
-        """
-        dst_db.commit()
-        while self._worker_state:
-            if not self._worker_state.wait_behind:
-                # need to switch to waiting on source side
-                return
-            cst = self._consumer_state
-            if cst:
-                # waiting does not reach to finish_remote_batch()
-                src_db = self.get_provider_db(cst)
-                self.publish_local_wm(src_db, dst_db)
-
-                # let is_batch_done handle it now
-                if cst['completed_tick'] >= tick_id:
-                    return
-
-            self.sleep(10 * self.loop_delay)
-            self._consumer_state = self.refresh_state(dst_db)
-            if not self.looping:
-                sys.exit(0)
-
     def is_batch_done(self, state: DictRow, batch_info: BatchInfo, dst_db: Connection) -> bool:
-
-        # on combined-branch the target can get several batches ahead
-        if self._worker_state and self._worker_state.wait_behind:
-            self.wait_for_tick(dst_db, batch_info['tick_id'])
-
-            # refresh state
-            if self._consumer_state:
-                state = self._consumer_state
 
         # handle combined_queue type change (branch->root)
         if self._worker_state and self.was_wait_behind:
@@ -249,6 +255,7 @@ class CascadedWorker(CascadedConsumer):
         st = self._worker_state
         assert st
         assert self.batch_info
+
         wm = st.local_watermark
         if st.sync_watermark:
             # dont send local watermark upstream
@@ -378,14 +385,6 @@ class CascadedWorker(CascadedConsumer):
         # merge-leaf on branch should not update tick pos
         st = self._worker_state
         assert st
-        if st.wait_behind:
-            dst_db.commit()
-
-            # still need to publish wm info
-            if st.local_wm_publish and self.main_worker:
-                self.publish_local_wm(src_db, dst_db)
-
-            return
 
         if self.main_worker:
             dst_curs = dst_db.cursor()
