@@ -1,6 +1,13 @@
 NEWS
 ====
 
+pgq 3.8
+-------
+
+* build: convert to pyproject.toml
+* typing: add full typing
+* ci: drop unmaintained actions
+
 pgq 3.7.3
 ---------
 
