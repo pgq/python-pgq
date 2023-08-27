@@ -90,8 +90,8 @@ jobs:
       - name: "Install extensions"
         run: |
           echo "::group::install-pgq"
-          git clone -q https://github.com/pgq/pgq; make -C pgq
-          sudo -nH bash -c "PATH='${PATH}' make install -C pgq"
+          git clone -q https://github.com/pgq/pgq pgq-sql; make -C pgq-sql
+          sudo -nH bash -c "PATH='${PATH}' make install -C pgq-sql"
           echo "::endgroup::"
 
           echo "::group::install-pgq-node"
