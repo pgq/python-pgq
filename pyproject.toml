@@ -4,7 +4,7 @@ description = "PgQ client library for Python"
 readme = "README.rst"
 keywords = ["database", "queue"]
 dynamic = ["version"]
-requires-python = ">= 3.7"
+requires-python = ">= 3.10"
 maintainers = [{name = "Marko Kreen", email = "markokr@gmail.com"}]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -92,7 +92,7 @@ extensions = "rst"
 #
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.14"
 strict = true
 
 disallow_any_unimported = true
@@ -216,7 +216,7 @@ persistent = true
 
 # Minimum Python version to use for version dependent checks. Will default to the
 # version used to run pylint.
-py-version = "3.10"
+py-version = "3.14"
 
 # Discover python modules and packages in the file system subtree.
 # recursive =

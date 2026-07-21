@@ -23,7 +23,7 @@ sdist:
 	python3 setup.py -q sdist
 
 test:
-	PGDATABASE=testdb TEST_Q_NAME=testq PGHOST=/tmp PGPORT=5120 tox -e py38
+	PGDATABASE=testdb TEST_Q_NAME=testq PGHOST=/tmp PGPORT=5120 tox -e py314
 
 checkver:
 	@echo "Checking version"

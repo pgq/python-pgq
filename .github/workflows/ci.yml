@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         test:
-          - {PY: "3.10", TOXENV: "lint"}
+          - {PY: "3.14", TOXENV: "lint"}
     steps:
       - name: "Checkout"
         uses: actions/checkout@v3
@@ -45,11 +45,11 @@ jobs:
     strategy:
       matrix:
         test:
-          - {PY: "3.7", PG: "11", TOXENV: "py37"}
-          - {PY: "3.8", PG: "12", TOXENV: "py38"}
-          - {PY: "3.9", PG: "13", TOXENV: "py39"}
           - {PY: "3.10", PG: "14", TOXENV: "py310"}
           - {PY: "3.11", PG: "15", TOXENV: "py311"}
+          - {PY: "3.12", PG: "16", TOXENV: "py312"}
+          - {PY: "3.13", PG: "17", TOXENV: "py313"}
+          - {PY: "3.14", PG: "18", TOXENV: "py314"}
     steps:
       - name: "Checkout"
         uses: actions/checkout@v3
